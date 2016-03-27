@@ -1,0 +1,26 @@
+{
+    "name": "mamchyts/katran-core",
+    "type": "library",
+    "description": "Composer package by Mamchyts",
+    "license": "MIT",
+    "homepage": "http://katran.by/",
+    "authors": [
+        {
+            "name": "Dmitry Mamchyts",
+            "email": "mamchyts@gmail.com",
+            "homepage": "http://katran.by/"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "monolog/monolog": "1.*",
+        "phpmailer/phpmailer": "5.*",
+        "intervention/image": "2.*",
+        "robmorgan/phinx": "0.5.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Katran\\": "./src/"
+        }
+    }
+}
