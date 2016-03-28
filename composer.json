@@ -16,7 +16,6 @@
         "monolog/monolog": "1.*",
         "phpmailer/phpmailer": "5.*",
         "intervention/image": "2.*",
-        "intervention/imagecache": "*",
         "robmorgan/phinx": "0.5.*"
     },
     "autoload": {
