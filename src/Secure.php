@@ -43,7 +43,10 @@ class Secure
         if(empty($salt))
             $salt = self::generateSalt();
 
-        return password_hash($plainText, PASSWORD_DEFAULT, ['cost' => 12, 'salt' => $salt]);
+        if(function_exists('password_verify'))
+            return password_hash($plainText, PASSWORD_DEFAULT, ['cost' => 12, 'salt' => $salt]);
+        else
+            return substr(md5($plainText), 0, 20).substr(sha1($plainText), 0, 20);
     }
 
 
@@ -57,6 +60,10 @@ class Secure
      */
     public static function passwordVerify($password = '', $hash = '')
     {
-        return password_verify($password, $hash);
+        // if php version < 5.5
+        if(function_exists('password_verify'))
+            return password_verify($password, $hash);
+        else
+            return self::generateHash($password) === $hash;
     }
 }
