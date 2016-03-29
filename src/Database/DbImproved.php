@@ -344,5 +344,3 @@ class DbImproved extends Db
         return $hash;
     }
 }
-
-/* End of file DbImproved.php */

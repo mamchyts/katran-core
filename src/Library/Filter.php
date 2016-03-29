@@ -18,14 +18,14 @@ class Filter
      * Filter data from HTML form
      * var array
      */
-    private $form_data = array();
+    private $form_data = [];
 
 
     /**
      * Map for $where param
      * var array
      */
-    private $creteria = array();
+    private $creteria = [];
 
 
     /**
@@ -51,7 +51,7 @@ class Filter
      * @return   void
      * @access   public
      */
-    public function setCreteria($creteria = array())
+    public function setCreteria($creteria = [])
     {
         $this->creteria = $creteria;
     }
@@ -68,12 +68,12 @@ class Filter
     {
         // if form was not submit - return empty array
         if(!isset($this->form_data['set']))
-            return array();
+            return [];
 
         // delete 
         unset($this->form_data['set']);
 
-        $where = array();
+        $where = [];
         foreach ($this->creteria as $key=>$c) {
             $c = strtolower($c);
 
