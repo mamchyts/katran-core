@@ -164,9 +164,14 @@ class Helper
             $mailer->send(self::_cfg('send_bug_to_email'), '_error()', $strHistory);
         }
 
+        $area = 'visitor';
+        $h = $history[sizeof($history)-1];
+        if(!empty($h['object']) && ($h['object'] instanceof \Katran\Application))
+            $area = $h['object']->getArea();
+
         // echo error info with history
         $app = new Application();
-        $app->setLayout('layout_visitor');
+        $app->setLayout('layout_'.$area);
         $app->setAliasPage('error.php');
 
         // set error text into 'error layout' and display them
