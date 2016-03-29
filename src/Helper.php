@@ -117,7 +117,7 @@ class Helper
             return false;
 
         // if console error
-        if(empty($_SERVER['QUERY_STRING'])){
+        if(php_sapi_name() === 'cli'){
             $str = 'Error code: '.$errno."\n".
                     'Message: '.$errstr."\n".
                     'File: '.$errfile."\n".
