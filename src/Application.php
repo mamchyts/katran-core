@@ -700,4 +700,31 @@ class Application extends Controller
         echo $this->container->get('fullText');
         return;
     }
+
+
+    /**
+     * Function set value in container
+     *
+     * @param   string  $key
+     * @param   mixed   $value
+     * @return  void
+     * @access  public
+     */
+    public function setContainerVal($key = '', $value = null)
+    {
+        $this->container->set($key, $value);
+    }
+
+
+    /**
+     * Function get value ftom container by $key
+     *
+     * @param   string  $key
+     * @return  mixed
+     * @access  public
+     */
+    public function getContainerVal($key = '')
+    {
+        return $this->container->get($key);
+    }
 }
