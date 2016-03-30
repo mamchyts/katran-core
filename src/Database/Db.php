@@ -109,9 +109,8 @@ class Db
         else
             trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
 
-        $obj->table = strtolower(basename($path));
         $obj->pdo = $pdo;
-        $obj->fullFields = $obj->getRows('SHOW FIELDS FROM `'.$obj->table.'`');
+        $obj->fullFields = $obj->getRows('SHOW FIELDS FROM `'.$obj->getTable().'`');
 
         foreach($obj->fullFields as $f)
             $obj->fields[] = $f['Field'];
@@ -141,8 +140,8 @@ class Db
         Timer::mark('sql_finish');
 
         // if error
-        if($this->result === false)
-            trigger_error(sprintf(Helper::_msg('mysql'), $this->pdo->errorInfo()));
+        if($this->result->errorCode() !== '00000')
+            trigger_error(sprintf(Helper::_msg('mysql'), implode('::', $this->result->errorInfo())));
 
         // if debug On save request into debug store
         if(Helper::_cfg('debug')){
@@ -224,6 +223,19 @@ class Db
     public function getTable()
     {
         return $this->table;
+    }
+
+
+    /**
+     * Function set table parameter
+     *
+     * @param   string $table
+     * @return  string
+     * @access  public
+     */
+    public function setTable($table = '')
+    {
+        return $this->table = $table;
     }
 
 

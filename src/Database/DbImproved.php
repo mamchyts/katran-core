@@ -15,17 +15,6 @@ use Katran\Helper;
 class DbImproved extends Db
 {
     /**
-     * Constructor
-     *
-     * @return   void
-     * @access  public
-     */
-    public function __construct()
-    {
-    }
-
-
-    /**
      * Function update one row in database
      *
      * @param    array   $data
@@ -50,7 +39,7 @@ class DbImproved extends Db
         // add WHERE $id
         $bindParams[] = $id;
 
-        $sql = 'UPDATE `'.$this->table.'` SET '.implode(', ', $sql).' WHERE `'.$updateBy.'` = ?';
+        $sql = 'UPDATE `'.$this->getTable().'` SET '.implode(', ', $sql).' WHERE `'.$updateBy.'` = ?';
         return $this->query($sql, $bindParams);
     }
 
@@ -82,7 +71,7 @@ class DbImproved extends Db
         $valStr = implode(', ', $sql);
 
         if (empty($table))
-            $table = $this->table;
+            $table = $this->getTable();
 
         $sql = 'INSERT INTO `'.$table.'` (`'.$fieldStr.'`) VALUES ('.$valStr.')';
         return $this->query($sql, $bindParams, 'insert');
@@ -111,7 +100,7 @@ class DbImproved extends Db
             }
         }
 
-        $sql = 'UPDATE `'.$this->table.'` SET '.implode(', ', $sql).' WHERE '.$where['sql'];
+        $sql = 'UPDATE `'.$this->getTable().'` SET '.implode(', ', $sql).' WHERE '.$where['sql'];
         return $this->query($sql, array_merge($bindParams, $where['value']));
     }
 
@@ -164,7 +153,7 @@ class DbImproved extends Db
      */
     public function find($id = 0, $field = 'id')
     {
-        $sql = 'SELECT * FROM `'.$this->table.'` WHERE `'.$field.'` = ?';
+        $sql = 'SELECT * FROM `'.$this->getTable().'` WHERE `'.$field.'` = ?';
         return $this->getRow($sql, [$id]);
     }
 
@@ -203,7 +192,7 @@ class DbImproved extends Db
         }
 
         // create and send sql request
-        $sql = 'SELECT * FROM `'.$this->table.'` WHERE '.$where['sql'].$order.$limit;
+        $sql = 'SELECT * FROM `'.$this->getTable().'` WHERE '.$where['sql'].$order.$limit;
         return $this->getRows($sql, $where['value']);
     }
 
@@ -226,7 +215,7 @@ class DbImproved extends Db
         $where = $this->_parseWhere($where);
 
         // Get count of possibly rows if count = 0  - return []
-        $sql = 'SELECT COUNT(id) FROM `'.$this->table.'` WHERE '.$where['sql'];
+        $sql = 'SELECT COUNT(id) FROM `'.$this->getTable().'` WHERE '.$where['sql'];
         $count = $this->getField($sql, $where['value']);
         if(intval($count) === 0)
             return [];
@@ -257,7 +246,7 @@ class DbImproved extends Db
         }
 
         // create and send sql request
-        $sql = 'SELECT * FROM `'.$this->table.'` WHERE '.$where['sql'].$order.$limit;
+        $sql = 'SELECT * FROM `'.$this->getTable().'` WHERE '.$where['sql'].$order.$limit;
         return $this->getRows($sql, $where['value']);
     }
 
@@ -270,7 +259,7 @@ class DbImproved extends Db
      */
     public function count()
     {
-        $sql = 'SELECT COUNT(id) FROM `'.$this->table.'`';
+        $sql = 'SELECT COUNT(id) FROM `'.$this->getTable().'`';
         return intval($this->getField($sql));
     }
 
@@ -287,7 +276,7 @@ class DbImproved extends Db
         // compile $where
         $where = $this->_parseWhere($where);
 
-        $sql = 'SELECT COUNT(id) FROM `'.$this->table.'` WHERE '.$where['sql'];
+        $sql = 'SELECT COUNT(id) FROM `'.$this->getTable().'` WHERE '.$where['sql'];
         return intval($this->getField($sql, $where['value']));
     }
 
@@ -301,7 +290,7 @@ class DbImproved extends Db
      */
     public function delete($id = 0, $field = 'id')
     {
-        $sql = 'DELETE FROM `'.$this->table.'` WHERE `'.$field.'` = ?';
+        $sql = 'DELETE FROM `'.$this->getTable().'` WHERE `'.$field.'` = ?';
         return intval($this->query($sql, [$id]));
     }
 
@@ -318,7 +307,7 @@ class DbImproved extends Db
         // compile $where
         $where = $this->_parseWhere($where);
 
-        $sql = 'DELETE FROM `'.$this->table.'` WHERE '.$where['sql'];
+        $sql = 'DELETE FROM `'.$this->getTable().'` WHERE '.$where['sql'];
         return intval($this->query($sql,$where['value']));
     }
 
@@ -334,7 +323,7 @@ class DbImproved extends Db
     {
         // create and send sql request
         if($sql === FALSE)
-            $sql = 'SELECT `'.$id.'`, `'.$title.'` FROM `'.$this->table.'` ORDER BY `'.$title.'` ASC';
+            $sql = 'SELECT `'.$id.'`, `'.$title.'` FROM `'.$this->getTable().'` ORDER BY `'.$title.'` ASC';
 
         $hash = [];
         foreach ($this->getRows($sql) as $r) {
@@ -344,5 +333,3 @@ class DbImproved extends Db
         return $hash;
     }
 }
-
-/* End of file DbImproved.php */
