@@ -710,7 +710,7 @@ class Application extends Controller
      * @return  void
      * @access  public
      */
-    public function setContainerVal($key = '', $value = null)
+    public function setContainerVar($key = '', $value = null)
     {
         $this->container->set($key, $value);
     }
@@ -723,7 +723,7 @@ class Application extends Controller
      * @return  mixed
      * @access  public
      */
-    public function getContainerVal($key = '')
+    public function getContainerVar($key = '')
     {
         return $this->container->get($key);
     }
