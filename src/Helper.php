@@ -416,4 +416,16 @@ class Helper
                 '`'=>'-','"'=>'-'
             ))))),'-');
     }
+
+
+    /**
+     * Function escape some symbols
+     *
+     * @param   string  $str
+     * @return  string
+     */
+    public static function _jsEscape($str = '')
+    {
+        return str_replace(['"'], ['&quot;'], $str);
+    }
 }
