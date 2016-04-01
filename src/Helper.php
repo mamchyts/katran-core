@@ -50,7 +50,19 @@ class Helper
     public static function _mkdir($dir = '', $mode = 0777)
     {
         mkdir($dir, $mode, true);
-        chmod($dir, $mode);
+        self::_chmod($dir, $mode);
+    }
+
+
+    /**
+     * [_chmod description]
+     * @param  string  $dirOrFile  [description]
+     * @param  integer $mode       [description]
+     * @return void
+     */
+    public static function _chmod($dirOrFile = '', $mode = 0777)
+    {
+        chmod($dirOrFile, $mode);
     }
 
 
@@ -172,7 +184,7 @@ class Helper
         // echo error info with history
         $app = new Application();
         $app->setLayout('layout_'.$area);
-        $app->setAliasPage('error.php');
+        $app->setContainerVar('_aliasPage', 'error.php');
 
         // set error text into 'error layout' and display them
         $app->getAliasContent($strHistory);

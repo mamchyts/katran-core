@@ -5,6 +5,7 @@
 namespace Katran;
 
 use Katran\Library\Timer;
+use Katran\Model\Accounts;
 
 /**
  * Application Class
@@ -69,37 +70,6 @@ class Application extends Controller
 
 
     /**
-     * [setArea description]
-     * @param string $area [description]
-     */
-    public function setArea($area = 'public')
-    {
-        $this->container->set('_area', $area);
-    }
-
-
-    /**
-     * [getArea description]
-     * @return    string
-     * @access    public
-     */
-    public function getArea()
-    {
-        return $this->container->get('_area');
-    }
-
-
-    /**
-     * [setAliasPage description]
-     * @param string $alias_page
-     */
-    public function setAliasPage($alias_page = '')
-    {
-        $this->container->set('_aliasPage', $alias_page);
-    }
-
-
-    /**
      * Function analise URL and select any action
      *
      * @return   void
@@ -111,22 +81,23 @@ class Application extends Controller
         $this->container->set('_alias', $this->container->get('request')->getString('alias', 'index'));
 
         switch ($this->container->get('_area')) {
-            case 'admin':
-                // default actions
-                if(!isset($_SESSION['admin']) && !in_array($this->container->get('_action'), ['login', 'do_login'])){
+            case Accounts::AREA_ADMIN:
+            case Accounts::AREA_MEMBER:
+                // redirect to login page
+                if(!isset($_SESSION[$this->container->get('_area')]) && !in_array($this->container->get('_action'), ['login', 'do_login'])){
                     $this->container->set('_controller', 'account');
                     $this->container->set('_action', 'login');
                 }
-                elseif(isset($_SESSION['admin']) && !$this->container->get('_controller')){
+                elseif(isset($_SESSION[$this->container->get('_area')]) && !$this->container->get('_controller')){
                     $this->container->set('_controller', 'account');
                     $this->container->set('_action', 'stat');
                 }
                 break;
             default:
-                if(!isset($_SESSION['visitor'])){
-                    $_SESSION['visitor']['id'] = 0;
-                    $_SESSION['visitor']['fname'] = 'Гость';
-                    $_SESSION['visitor']['lname'] = '';
+                if(!isset($_SESSION[Accounts::AREA_VISITOR])){
+                    $_SESSION[Accounts::AREA_VISITOR]['id'] = 0;
+                    $_SESSION[Accounts::AREA_VISITOR]['fname'] = 'Гость';
+                    $_SESSION[Accounts::AREA_VISITOR]['lname'] = '';
                 }
                 break;
         }
@@ -699,6 +670,27 @@ class Application extends Controller
     {
         echo $this->container->get('fullText');
         return;
+    }
+
+
+    /**
+     * [setArea description]
+     * @param string $area [description]
+     */
+    public function setArea($area = 'public')
+    {
+        $this->container->set('_area', $area);
+    }
+
+
+    /**
+     * [getArea description]
+     * @return    string
+     * @access    public
+     */
+    public function getArea()
+    {
+        return $this->container->get('_area');
     }
 
 
