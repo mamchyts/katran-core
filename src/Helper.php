@@ -438,6 +438,11 @@ class Helper
      */
     public static function _jsEscape($str = '')
     {
-        return str_replace(['"'], ['&quot;'], $str);
+        $str = trim($str);
+        if(!is_numeric($str))
+            $str = str_replace(['"'], ['&quot;'], $str);
+
+
+        return $str;
     }
 }
