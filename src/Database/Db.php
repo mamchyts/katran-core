@@ -68,14 +68,14 @@ class Db
 
 
     /**
-     * Function return object for work with table basename($namespace)
+     * Function return object for work with table basename($dbModel)
      *
-     * @param   string     $namespace
+     * @param   mixed      $dbModel
      * @param   array|hash $config
      * @return  object
      * @access  public
      */
-    public static function getModel($namespace = '', $config = [])
+    public static function getModel($dbModel = '', $config = [])
     {
         if(empty($config))
             $config = Helper::_cfg('db');
@@ -97,17 +97,23 @@ class Db
             $tables[$pdoHash] = $db->getFields('SHOW TABLES;');
         }
 
-        $path = str_replace(Helper::_cfg('namespace').'\\', '', $namespace);
-        $path = str_replace('\\', '/', $path);
-        $file = Helper::_cfg('path_src').'/'.$path.'.php';
+        // if get already DbImproved child
+        if($dbModel instanceof DbImproved){
+            $obj = $dbModel;
+        }
+        else{
+            $path = str_replace(Helper::_cfg('namespace').'\\', '', $dbModel);
+            $path = str_replace('\\', '/', $path);
+            $file = Helper::_cfg('path_src').'/'.$path.'.php';
 
-        // if hasn't file - create base class
-        if(file_exists($file))
-            $obj = new $namespace();
-        elseif(in_array(basename($namespace), $tables[$pdoHash]))
-            $obj = new DbImproved();
-        else
-            trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
+            // if hasn't file - create base class
+            if(file_exists($file))
+                $obj = new $dbModel();
+            elseif(in_array(basename($dbModel), $tables[$pdoHash]))
+                $obj = new DbImproved();
+            else
+                trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
+        }
 
         $obj->pdo = $pdo;
         $obj->fullFields = $obj->getRows('SHOW FIELDS FROM `'.$obj->getTable().'`');
