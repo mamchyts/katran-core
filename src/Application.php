@@ -103,7 +103,7 @@ class Application extends Controller
         }
 
         // set default layout
-        $this->setLayout('layout_'.$this->container->get('_area'));
+        $this->setLayout('./'.ucfirst($this->getArea()).'/View/layout.php');
 
         // run process
         if($this->container->get('_controller'))
@@ -154,7 +154,7 @@ class Application extends Controller
             trigger_error("Class name: ".__CLASS__.'()  function: '.__FUNCTION__.'()  Request hasn\'t Mod param.');
 
         $area           = ucfirst($this->container->get('_area'));
-        $namespace      = '\\'.Helper::_cfg('namespace').'\\'.$area.'\\Controller\\'.ucfirst($this->container->get('_controller'));
+        $controller     = '\\'.$this->getSrcNamespace().'\\'.$area.'\\Controller\\'.ucfirst($this->container->get('_controller'));
         $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($this->container->get('_controller')).'.php';
         $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
         $actMethod      = str_replace('_', '', $this->container->get('_action')).'Action';
@@ -167,10 +167,10 @@ class Application extends Controller
             Timer::mark('call_controller[_processMod]');
 
         // call controller
-        $obj = new $namespace();
+        $obj = new $controller();
 
         if(!method_exists($obj, $actMethod))
-            trigger_error('Call to undefined method '.$namespace.'::'.$actMethod.'()');
+            trigger_error('Call to undefined method '.$controller.'::'.$actMethod.'()');
 
         // call method
         $view = call_user_func_array([$obj, $actMethod], [$this->container->get('request')]);
@@ -198,7 +198,7 @@ class Application extends Controller
 
         // save result
         // it's bad but work quickly
-        $this->container->set('_aliasContentText', $view->content);
+        $this->container->set('_layoutContent', $view->content);
     }
 
 
@@ -218,33 +218,33 @@ class Application extends Controller
 
         $page .= '.php';
 
-        // read directory and save results into tmp variable $ok_files
-        $ok_files = array();
-        $dir = opendir(Helper::_cfg('path_src').'/tpl/alias/');
+        // read directory and save results into tmp variable $okFiles
+        $okFiles = [];
+        $dir = opendir(Helper::_cfg('path_src').'/Common/View/_alias/');
         while(($f = readdir($dir)) !== FALSE){
             if(strstr($f, $page) !== FALSE)
-                $ok_files[] = $f;
+                $okFiles[] = $f;
         }
 
         // foreach all matches
         $res = -1;
-        $matches_lingth = sizeof($ok_files);
+        $matches_lingth = sizeof($okFiles);
         if($matches_lingth > 0){
             for($i = 0; $i < $matches_lingth; ++$i){
                 // full match - return 'ok'
-                if($ok_files[$i] === $page){
+                if($okFiles[$i] === $page){
                     $res = 1;
-                    $this->container->set('_aliasPage', $ok_files[$i]);
+                    $this->container->set('_aliasPage', $okFiles[$i]);
                     break;
                 }
-                elseif ($ok_files[$i] === $area.'_'.$page) {
+                elseif ($okFiles[$i] === $area.'_'.$page) {
                     $res = 0;
-                    $this->container->set('_aliasPage', $ok_files[$i]);
+                    $this->container->set('_aliasPage', $okFiles[$i]);
                     break;
                 }
             }
         }
-        elseif(file_exists(Helper::_cfg('path_src').'/tpl/alias/default.php')){
+        elseif(file_exists(Helper::_cfg('path_src').'/Common/View/_alias/default.php')){
             $res = 1;
             $this->container->set('_aliasPage', 'default.php');
         }
@@ -264,14 +264,14 @@ class Application extends Controller
      * @return   void
      * @access  public
      */
-    public function setLayout($layout)
+    public function setLayout($layout = '')
     {
         $this->container->set('_layout', $layout);
     }
 
 
     /**
-     * Function get content from file '/app/tpl/alias/'.$this->container->get('_alias').'.php'
+     * Function get content from file './src/Common/View/_alias/'.$this->container->get('_alias').'.php'
      * Used in error handler.
      *
      * @return   void
@@ -285,11 +285,11 @@ class Application extends Controller
             Timer::mark('getAliasContent');
 
         // get content from alias page.
-        $file = Helper::_cfg('path_src').'/tpl/alias/'.$this->container->get('_aliasPage');
+        $file = Helper::_cfg('path_src').'/Common/View/_alias/'.$this->container->get('_aliasPage');
 
         if($debugErrorText){
             $vars = array('error' => $debugErrorText);
-            $this->container->set('_aliasContentText', $this->_getFileContent($file, $vars));
+            $this->container->set('_layoutContent', $this->_getFileContent($file, $vars));
             $this->_getFullText();
             $this->display();
             exit(0);
@@ -305,11 +305,11 @@ class Application extends Controller
                 $this->container->set('_alias_content_file', str_replace($tag, $act, $this->container->get('_alias_content_file')));
             }
 
-            $this->container->set('_aliasContentText', $this->container->get('_alias_content_file'));
+            $this->container->set('_layoutContent', $this->container->get('_alias_content_file'));
         }
         else{
-            $vars = array();
-            $this->container->set('_aliasContentText', $this->_getFileContent($file, $vars));
+            $vars = [];
+            $this->container->set('_layoutContent', $this->_getFileContent($file, $vars));
         }
 
         // timer mark
@@ -319,7 +319,7 @@ class Application extends Controller
 
 
     /**
-     * Function parse file '/app/tpl/alias/'.$this->container->get('_alias').'.php'
+     * Function parse file './src/Common/View/_alias/'.$this->container->get('_alias').'.php'
      *
      * @param    string     $content
      * @return   void
@@ -356,7 +356,7 @@ class Application extends Controller
      * @return   void
      * @access  private
      */
-    private function _processGetModelAction($action = array())
+    private function _processGetModelAction($action = [])
     {
         // timer mark
         if(Helper::_cfg('debug'))
@@ -369,7 +369,7 @@ class Application extends Controller
             // create controller object (if exists)
             if(sizeof($controller) === 5){
                 $area           = ucfirst($this->container->get('_area'));
-                $namespace      = '\\'.Helper::_cfg('namespace').'\\'.$area.'\\Controller\\'.ucfirst($controller[2]);
+                $controller     = '\\'.$this->getSrcNamespace().'\\'.$area.'\\Controller\\'.ucfirst($controller[2]);
                 $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($controller[2]).'.php';
                 $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
                 $actMethod      = str_replace('_', '', $controller[4]).'Action';
@@ -382,10 +382,10 @@ class Application extends Controller
                     Timer::mark('call_controller[_processGetModelAction]');
 
                 // call controller
-                $obj = new $namespace();
+                $obj = new $controller();
 
                 if(!method_exists($obj, $actMethod))
-                    trigger_error('Call to undefined method '.$namespace.'::'.$actMethod.'()');
+                    trigger_error('Call to undefined method '.$controller.'::'.$actMethod.'()');
 
                 $view = call_user_func_array([$obj, $actMethod], [$this->container->get('request')]);
 
@@ -460,7 +460,7 @@ class Application extends Controller
      * @return   void
      * @access   private
      */
-    private function parseTemplateFromView($templates = array(), &$view = FALSE)
+    private function parseTemplateFromView($templates = [], &$view = FALSE)
     {
         // timer mark
         if(Helper::_cfg('debug'))
@@ -485,21 +485,21 @@ class Application extends Controller
                     for($i = 0; $i < sizeof($vars[0]); $i++){
                         // param 'name' is a file name of template
                         if($vars[1][$i] === 'name')
-                            $view->templates[$key2]['templateFileName'] = $vars[2][$i].'.php';
+                            $view->templates[$key2]['templateFileName'] = './'.ucfirst($this->getArea()).'/View/_template/'.$vars[2][$i].'.php';
 
                         $view->templates[$key2]['args'][$vars[1][$i]] = $vars[2][$i];
                     }
                 }
             }
             elseif($key1 === 3){
-                // if template has content - set '1', else - set '0';
+                // if template has content - set 'true', else - set 'false';
                 foreach($t as $key2=>$r){
                     if(trim($r) === ''){
                         $view->templates[$key2]['templateTag'] = $templates[0][$key2];
-                        $view->templates[$key2]['hasContent'] = '0';
+                        $view->templates[$key2]['hasContent'] = false;
                     }
                     else
-                        $view->templates[$key2]['hasContent'] = '1';
+                        $view->templates[$key2]['hasContent'] = true;
                 }
             }
         }
@@ -526,8 +526,10 @@ class Application extends Controller
             Timer::mark('getTemplateContent');
 
         foreach($view->templates as &$t){
-            $t['contentText'] = $this->_getFileContent(Helper::_cfg('path_src').'/tpl/template/'.$t['templateFileName'], $t['args']);
-            if($t['hasContent'] === '1'){
+            $path = Helper::_cfg('path_src').$t['templateFileName'];
+            $t['contentText'] = $this->_getFileContent($path, $t['args']);
+
+            if($t['hasContent'] === true){
                 $content = explode('<content></content>', $t['contentText']);
                 $t['contentHeader'] = $content[0];
                 $t['contentFooter'] = $content[1];
@@ -555,11 +557,11 @@ class Application extends Controller
             Timer::mark('replaceTemplateTags');
 
         foreach($view->templates as &$t){
-            if($t['hasContent'] === '0'){
+            if($t['hasContent'] === false){
                 $view->content = str_replace($t['templateTag'], $t['contentText'], $view->content);
             }
             else{
-                $pattern = '{('.$t['templateTag'].')(.*)(</template>)}imsU';
+                $pattern = '/('.$t['templateTag'].')(.*)(</template>)/imsU';
                 $replacement = $t['contentHeader'].' $2 '.$t['contentFooter'];
                 $view->content = preg_replace($pattern, $replacement, $view->content);
             }
@@ -580,7 +582,7 @@ class Application extends Controller
      * @return   string
      * @access  private
      */
-    private function _getFileContent($file, $vars = array())
+    private function _getFileContent($file, $vars = [])
     {
         $url = new Url();
         $currentUrl = $url->getUrl(TRUE);
@@ -621,12 +623,14 @@ class Application extends Controller
      */
     private function _getFullText()
     {
-        $file = Helper::_cfg('path_src').'/tpl/'.$this->container->get('_layout').'.php';
-        $array = array('layoutContent' => $this->container->get('_aliasContentText'));
+        $file = Helper::_cfg('path_src').$this->container->get('_layout');
+        $array = [
+            'layoutContent' => $this->container->get('_layoutContent'),
+        ];
 
         // if debug On - show debug div
         if(Helper::_cfg('debug')){
-            $debug_file = Helper::_cfg('path_src').'/tpl/template/debug.php';
+            $debugTemplateFile = Helper::_cfg('path_src').'/Common/View/_template/debug.php';
 
             // timer mark
             Timer::time('globalStart');
@@ -637,10 +641,10 @@ class Application extends Controller
                 'timer'   => Helper::_debugStore('timer'),
             ];
 
-            $debug_str = $this->_getFileContent($debug_file, $debug);
-            $array['debug'] = $debug_str;
+            $array['debug'] = $this->_getFileContent($debugTemplateFile, $debug);
         }
 
+        // compile view
         $layoutFullText = $this->_getFileContent($file, $array);
 
         // parse view tpl
@@ -718,5 +722,26 @@ class Application extends Controller
     public function getContainerVar($key = '')
     {
         return $this->container->get($key);
+    }
+
+
+    /**
+     * [setSrcNamespace description]
+     * @param string $namespace [description]
+     */
+    public function setSrcNamespace($namespace = 'Src')
+    {
+        $this->container->set('_srcNamespace', $namespace);
+    }
+
+
+    /**
+     * [getSrcNamespace description]
+     * @return    string
+     * @access    public
+     */
+    public function getSrcNamespace()
+    {
+        return $this->container->get('_srcNamespace');
     }
 }

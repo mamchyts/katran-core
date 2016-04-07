@@ -183,7 +183,9 @@ class Helper
 
         // echo error info with history
         $app = new Application();
-        $app->setLayout('layout_'.$area);
+        $app->setArea($area);
+        $app->setLayout('./'.ucfirst($app->getArea()).'/View/layout.php');
+        $app->setSrcNamespace('Site');
         $app->setContainerVar('_aliasPage', 'error.php');
 
         // set error text into 'error layout' and display them
