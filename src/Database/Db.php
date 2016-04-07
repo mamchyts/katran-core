@@ -68,7 +68,7 @@ class Db
 
 
     /**
-     * Function return object for work with table basename($dbModel)
+     * Function return object for work with table $dbModel
      *
      * @param   mixed      $dbModel
      * @param   array|hash $config
@@ -80,8 +80,8 @@ class Db
         if(empty($config))
             $config = Helper::_cfg('db');
 
-        static $pdoArray = [];
         static $tables = [];
+        static $pdoArray = [];
 
         $pdoHash = $config['host'].'::'.$config['name'].'::'.$config['port'].'::'.$config['user'];
 
@@ -101,18 +101,12 @@ class Db
         if($dbModel instanceof DbImproved){
             $obj = $dbModel;
         }
+        // if we already have such table
+        elseif(in_array($dbModel, $tables[$pdoHash])){
+            $obj = new DbImproved($dbModel);
+        }
         else{
-            $path = str_replace(Helper::_cfg('namespace').'\\', '', $dbModel);
-            $path = str_replace('\\', '/', $path);
-            $file = Helper::_cfg('path_src').'/'.$path.'.php';
-
-            // if hasn't file - create base class
-            if(file_exists($file))
-                $obj = new $dbModel();
-            elseif(in_array(basename($dbModel), $tables[$pdoHash]))
-                $obj = new DbImproved();
-            else
-                trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
+            trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
         }
 
         $obj->pdo = $pdo;

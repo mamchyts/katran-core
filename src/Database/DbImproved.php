@@ -15,6 +15,20 @@ use Katran\Helper;
 class DbImproved extends Db
 {
     /**
+     * Constructor set table
+     *
+     * @return  void
+     * @version 2016-03-30
+     * @access  public
+     */
+    public function __construct($table = null)
+    {
+        if(!empty($table))
+            parent::setTable($table);
+    }
+
+
+    /**
      * Function update one row in database
      *
      * @param    array   $data
