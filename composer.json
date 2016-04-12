@@ -17,7 +17,7 @@
         "phpmailer/phpmailer": "5.*",
         "intervention/image": "2.*",
         "robmorgan/phinx": "0.5.*",
-        "guzzlehttp/psr7": "1.*"
+        "guzzlehttp/psr7": "dev-master"
     },
     "autoload": {
         "psr-4": {
