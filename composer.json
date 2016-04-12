@@ -16,7 +16,8 @@
         "monolog/monolog": "1.*",
         "phpmailer/phpmailer": "5.*",
         "intervention/image": "2.*",
-        "robmorgan/phinx": "0.5.*"
+        "robmorgan/phinx": "0.5.*",
+        "guzzlehttp/psr7": "1.*"
     },
     "autoload": {
         "psr-4": {
