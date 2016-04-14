@@ -4,10 +4,10 @@
  */
 namespace Katran;
 
+use Katran\Library\Flashbag;
+
 /**
  * Base Controller class (parent of all controllers)
- *
- * @package Application
  */
 class Controller
 {
@@ -15,45 +15,28 @@ class Controller
      * [$errors description]
      * @var array
      */
-    var $errors = [];
+    private $errors = [];
 
 
     /**
      * Function redirect user to $url
-     *
-     * @param    string  $url
-     * @param    array   $error
-     * @param    array   $mes
-     * @param    string  $area
-     * @return   void
-     * @access  public
+     * 
+     * @param  string  $url
+     * @param  string  $error
+     * @param  string  $info
+     * @return void
      */
-    public function forward($url = FALSE, $error = array(), $mes = array(), $area = 'global')
+    public function forward($url, $error = '', $info = '')
     {
-        if($url){
-            $_url   = new Url($url);
-            $errors = array();
-            $mess   = array();
+        // save messages
+        if(!empty($error))
+            Flashbag::add(Flashbag::TYPE_ERROR, $error);
+        if(!empty($info))
+            Flashbag::add(Flashbag::TYPE_INFO, $info);
 
-            if(is_string($error))
-                $errors[] = $error;
-            else
-                $errors = $error;
-
-            if(is_string($mes))
-                $mess[] = $mes;
-            else
-                $mess = $mes;
-
-            $_SESSION[$_url->getUrl()][$area]['error'] = $errors;
-            $_SESSION[$_url->getUrl()][$area]['mess']  = $mess;
-
-            header('HTTP/1.1 301 Moved Permanently');
-            Header('Location: '.$url);
-            exit();
-        }
-        else
-            trigger_error('Error. No URL string!');
+        header('HTTP/1.1 301 Moved Permanently');
+        Header('Location: '.$url);
+        exit();
     }
 
 
@@ -105,23 +88,15 @@ class Controller
     /**
      * Function add errors into session
      *
-     * @param   array   $error  array of errors
-     * @param   boolean $url
-     * @param   string  $area
+     * @param   array   $e
      * @return  void
      * @access  public
      */
-    public function addSessionError($error = array(), $url = '', $area = 'global')
+    public function addSessionErrors(array $e)
     {
-        $_url = new Url($url);
-
-        if(is_string($error))
-            $errors[] = $error;
-        else
-            $errors = $error;
-
-        $_SESSION[$_url->getUrl()][$area]['error'] = $errors;
-        $_SESSION[$_url->getUrl()][$area]['mess']  = array();
+        foreach ($e as $error) {
+            Flashbag::add(Flashbag::TYPE_ERROR, $error);
+        }
     }
 
 
@@ -130,26 +105,9 @@ class Controller
      * @param  array   $data
      * @return void
      */
-    public function ajaxResponse($data = array())
+    public function ajaxResponse($data = [])
     {
         header('Content-Type: application/json');
         echo json_encode($data);
-        exit(0);
-    }
-
-
-    /**
-     * Function redirect user
-     *
-     * @param   string $page
-     * @return  void
-     * @access  public
-     */
-    public function redirectPage($page)
-    {
-        $url = new Url($page);
-        header('HTTP/1.1 301 Moved Permanently');
-        Header('Location: '.$url->getUrl());
-        exit();
     }
 }

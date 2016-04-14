@@ -4,14 +4,11 @@
  */
 namespace Katran\Library;
 
-
 use Katran\Helper;
+use GuzzleHttp\Psr7\ServerRequest;
 
 /**
  * This class check received form for correctly input information.
- * 
- * @version 2012-07-07
- * @package	Libraries
  */
 class Validator
 {
@@ -19,19 +16,19 @@ class Validator
      * Array of errors
      * var array
      */
-    private $errors = array();
+    private $errors = [];
 
     /**
      * Array of income fields
      * var array
      */
-    private $fields = array();
+    private $fields = [];
 
     /**
      * Array of rules
      * var array
      */
-    private $rules = array();
+    private $rules = [];
 
 
     /**
@@ -44,8 +41,8 @@ class Validator
      */
     public function setFields($request)
     {
-        if(is_object($request))
-            $this->fields = $request->getArgs();
+        if($request instanceof ServerRequest)
+            $this->fields = $request->getParsedBody();
         elseif(is_array($request))
             $this->fields = $request;
     }
@@ -100,11 +97,12 @@ class Validator
 
         // Build our master array
         $this->rules[$field] = array(
-            'field'     => $field,
-            'label'	    => $label,
-            'rule'	    => $rule,
-            'errors'     => array()
+            'field'  => $field,
+            'label'	 => $label,
+            'rule'	 => $rule,
+            'errors' => [],
         );
+
         return 1;
     }
 

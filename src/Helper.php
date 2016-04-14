@@ -176,10 +176,12 @@ class Helper
             $mailer->send(self::_cfg('send_bug_to_email'), '_error()', $strHistory);
         }
 
-        $area = 'visitor';
+        $area = 'admin';
         $h = $history[sizeof($history)-1];
-        if(!empty($h['object']) && ($h['object'] instanceof \Katran\Application))
-            $area = $h['object']->getArea();
+        if(!empty($h['object']) && ($h['object'] instanceof \Katran\Application)){
+            if($h['object']->getArea())
+                $area = $h['object']->getArea();
+        }
 
         // echo error info with history
         $app = new Application();

@@ -17,6 +17,7 @@ class Container
      */
     private $storage = [];
 
+
     /**
      * Function return value
      *
@@ -39,5 +40,28 @@ class Container
     public function set($name = '', $value = null)
     {
         $this->storage[$name] = $value;
+    }
+
+
+    /**
+     * Function check var in storage
+     *
+     * @param   string    $name
+     * @return  bool
+     */
+    public function has($name = '')
+    {
+        return !empty($this->storage[$name]);
+    }
+
+
+    /**
+     * Function return all container
+     *
+     * @return  array
+     */
+    public function all()
+    {
+        return $this->storage;
     }
 }

@@ -6,6 +6,7 @@ namespace Katran;
 
 use Katran\Library\Timer;
 use Katran\Model\Accounts;
+use GuzzleHttp\Psr7\ServerRequest;
 
 /**
  * Application Class
@@ -46,18 +47,24 @@ class Application extends Controller
         $this->container = new Container();
 
         // create request object
-        $request = new Request();
+        $request = ServerRequest::fromGlobals();
         $this->container->set('request', $request);
 
+        // need for detect action
+        $queryParams = $request->getQueryParams();
+
+        // set alias value if exist, or set default `index`
+        $this->container->set('_alias', !empty($queryParams['alias'])?$queryParams['alias']:'index');
+
         // set controller/action if exist
-        if($_controller = $request->getParam('controller', false))
-            $this->container->set('_controller', $_controller);
-        if($_action = $request->getParam('action', false))
-            $this->container->set('_action', $_action);
+        if(!empty($queryParams['controller']))
+            $this->container->set('_controller', $queryParams['controller']);
+        if(!empty($queryParams['action']))
+            $this->container->set('_action', $queryParams['action']);
 
         // if form was send, and submit has special name
-        $submitBtn = $request->getParam('submit');
-        if( !empty($submitBtn) && is_array($submitBtn)){
+        $parsedBody = $request->getParsedBody();
+        if( $submitBtn = !empty($parsedBody['submit'])?$parsedBody['submit']:null ){
             $submit = explode('|', key($submitBtn));
             $this->container->set('_controller', $submit[0]);
             $this->container->set('_action', $submit[1]);
@@ -77,9 +84,6 @@ class Application extends Controller
      */
     public function process()
     {
-        // set alias value if exist, or set default `index`
-        $this->container->set('_alias', $this->container->get('request')->getString('alias', 'index'));
-
         switch ($this->container->get('_area')) {
             case Accounts::AREA_ADMIN:
             case Accounts::AREA_MEMBER:
@@ -111,7 +115,7 @@ class Application extends Controller
         elseif($this->container->get('_alias'))
             $this->_processAlias();
         else
-            $this->redirectPage('/404');
+            $this->forward('/404');
 
         // prepare page response
         $this->_getFullText();
@@ -130,11 +134,11 @@ class Application extends Controller
 
         // 1 - ok, 0 - must be login, -1 - file none exist
         if($rights === -1)
-            $this->redirectPage('/404');
+            $this->forward('/404');
         elseif($rights === 0){
             // access off
             if(empty($_SESSION[$this->container->get('_area')]))
-                $this->redirectPage('/401');
+                $this->forward('/401');
         }
 
         $this->_setHeaderCharset();
