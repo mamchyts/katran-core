@@ -5,6 +5,7 @@
 namespace Katran\Library;
 
 use Katran\Helper;
+use Katran\Request;
 use GuzzleHttp\Psr7\ServerRequest;
 
 /**
@@ -41,7 +42,9 @@ class Validator
      */
     public function setFields($request)
     {
-        if($request instanceof ServerRequest)
+        if($request instanceof Request)
+            $this->fields = $request->serverRequest->getParsedBody();
+        elseif($request instanceof ServerRequest)
             $this->fields = $request->getParsedBody();
         elseif(is_array($request))
             $this->fields = $request;
@@ -223,7 +226,9 @@ class Validator
             if(is_array($r)){
                 if (!method_exists($this, $r[0]))
                     continue;
-                $result = $this->$r[0]($data, $r[1]);
+
+                $functionName = $r[0];
+                $result = $this->$functionName($data, $r[1]);
             }
             else{
                 if (!method_exists($this, $r))

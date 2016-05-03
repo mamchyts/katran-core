@@ -6,7 +6,6 @@ namespace Katran;
 
 use Katran\Library\Timer;
 use Katran\Model\Accounts;
-use GuzzleHttp\Psr7\ServerRequest;
 
 /**
  * Application Class
@@ -47,11 +46,11 @@ class Application extends Controller
         $this->container = new Container();
 
         // create request object
-        $request = ServerRequest::fromGlobals();
+        $request = new Request();
         $this->container->set('request', $request);
 
         // need for detect action
-        $queryParams = $request->getQueryParams();
+        $queryParams = $request->serverRequest->getQueryParams();
 
         // set alias value if exist, or set default `index`
         $this->container->set('_alias', !empty($queryParams['alias'])?$queryParams['alias']:'index');
@@ -63,7 +62,7 @@ class Application extends Controller
             $this->container->set('_action', $queryParams['action']);
 
         // if form was send, and submit has special name
-        $parsedBody = $request->getParsedBody();
+        $parsedBody = $request->serverRequest->getParsedBody();
         if( $submitBtn = !empty($parsedBody['submit'])?$parsedBody['submit']:null ){
             $submit = explode('|', key($submitBtn));
             $this->container->set('_controller', $submit[0]);
@@ -158,7 +157,7 @@ class Application extends Controller
             trigger_error("Class name: ".__CLASS__.'()  function: '.__FUNCTION__.'()  Request hasn\'t Mod param.');
 
         $area           = ucfirst($this->container->get('_area'));
-        $controller     = '\\'.$this->getSrcNamespace().'\\'.$area.'\\Controller\\'.ucfirst($this->container->get('_controller'));
+        $controller     = '\\'.$area.'\\Controller\\'.ucfirst($this->container->get('_controller'));
         $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($this->container->get('_controller')).'.php';
         $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
         $actMethod      = str_replace('_', '', $this->container->get('_action')).'Action';
@@ -232,9 +231,9 @@ class Application extends Controller
 
         // foreach all matches
         $res = -1;
-        $matches_lingth = sizeof($okFiles);
-        if($matches_lingth > 0){
-            for($i = 0; $i < $matches_lingth; ++$i){
+        $matchesLingth = sizeof($okFiles);
+        if($matchesLingth > 0){
+            for($i = 0; $i < $matchesLingth; ++$i){
                 // full match - return 'ok'
                 if($okFiles[$i] === $page){
                     $res = 1;
@@ -373,7 +372,7 @@ class Application extends Controller
             // create controller object (if exists)
             if(sizeof($_controller) === 5){
                 $area           = ucfirst($this->container->get('_area'));
-                $controller     = '\\'.$this->getSrcNamespace().'\\'.$area.'\\Controller\\'.ucfirst($_controller[2]);
+                $controller     = '\\'.$area.'\\Controller\\'.ucfirst($_controller[2]);
                 $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($_controller[2]).'.php';
                 $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
                 $actMethod      = str_replace('_', '', $_controller[4]).'Action';
@@ -726,26 +725,5 @@ class Application extends Controller
     public function getContainerVar($key = '')
     {
         return $this->container->get($key);
-    }
-
-
-    /**
-     * [setSrcNamespace description]
-     * @param string $namespace [description]
-     */
-    public function setSrcNamespace($namespace = 'Src')
-    {
-        $this->container->set('_srcNamespace', $namespace);
-    }
-
-
-    /**
-     * [getSrcNamespace description]
-     * @return    string
-     * @access    public
-     */
-    public function getSrcNamespace()
-    {
-        return $this->container->get('_srcNamespace');
     }
 }
