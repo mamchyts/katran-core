@@ -6,7 +6,6 @@ namespace Katran\Library;
 
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use PHPMailer\PHPMailer\PHPMailer;
 use Katran\Helper;
 
 /**
@@ -21,40 +20,35 @@ use Katran\Helper;
 class Mailer
 {
     /**
-     * PHPMailer class
+     * Mailer class
      * @var object
      */
-    public $phpmailer = FALSE;
+    public $mailer = FALSE;
 
     /**
      * Constructor
      *
-     * Create PHPMailer object
+     * Create Mailer object
      *
      * @return  object
      * @access  public
      */
     public function __construct()
     {
-        // create object
-        $this->phpmailer = new PHPMailer();
+        // smtp OR mail (sendmail)
+        $conf = Helper::_cfg('mail', 'smtp');
+        if(!empty($conf['host'])){
+            $transport = \Swift_SmtpTransport::newInstance($conf['host'], $conf['port'], $conf['secure'])
+                ->setTimeout($conf['timeout'])
+                ->setUsername($conf['user'])
+                ->setPassword($conf['pass']);
+        }
+        else{
+            $transport = \Swift_MailTransport::newInstance();
+        }
 
-        // set from options
-        $this->phpmailer->SetFrom(Helper::_cfg('mail', 'return_path'), Helper::_cfg('mail', 'return_path_name'));
-        $this->phpmailer->AddReplyTo(Helper::_cfg('mail', 'return_path'), Helper::_cfg('mail', 'return_path_name'));
-        $this->phpmailer->IsHTML(true);
-        $this->phpmailer->IsSMTP();
-        $this->phpmailer->SMTPDebug  = 0;
-        $this->phpmailer->CharSet    = Helper::_cfg('page_charset');
-        $this->phpmailer->Host       = Helper::_cfg('mail', 'smtp', 'host');
-        $this->phpmailer->SMTPAuth   = Helper::_cfg('mail', 'smtp', 'auth');
-        $this->phpmailer->SMTPSecure = Helper::_cfg('mail', 'smtp', 'secure');
-        $this->phpmailer->Port       = Helper::_cfg('mail', 'smtp', 'port');
-        $this->phpmailer->Timeout    = Helper::_cfg('mail', 'smtp', 'timeout');
-
-        // set username/password
-        $this->phpmailer->Username   = Helper::_cfg('mail', 'smtp', 'user');
-        $this->phpmailer->Password   = Helper::_cfg('mail', 'smtp', 'pass');
+        // Create the Mailer using your created Transport
+        $this->mailer = \Swift_Mailer::newInstance($transport);
 
         // create dir if need 
         if(!file_exists(dirname(Helper::_cfg('mail_log'))))
@@ -76,38 +70,43 @@ class Mailer
      * @return void
      * @access public
      */
-    public function send($to = array(), $subject = '', $body = '', $attachment = array())
+    public function send($to = [], $subject = '', $body = '', $attachment = [])
     {
-        // clear old data;
-        $this->phpmailer->clearAllRecipients();
-        $this->phpmailer->clearAttachments();
-
         // $to must be array
         if(!is_array($to))
             $to = array($to);
 
-        $this->phpmailer->Subject = $subject;
-        $this->phpmailer->MsgHTML($body);
+        // create instance
+        $message = \Swift_Message::newInstance();
+
+        // set from options
+        $message->setFrom([Helper::_cfg('mail', 'return_path') => Helper::_cfg('mail', 'return_path_name')]);
+        $message->setReplyTo([Helper::_cfg('mail', 'return_path') => Helper::_cfg('mail', 'return_path_name')]);
+        $message->setContentType('text/html');
+        $message->setCharset(Helper::_cfg('page_charset'));
+
+        // set content
+        $message->setSubject($subject);
+        $message->setBody($body);
 
         $error = FALSE;
         try {
             // attachment files
-            foreach ($attachment as $key => $file_name)
-                $this->phpmailer->AddAttachment($key, $file_name);
+            foreach ($attachment as $path => $fileName){
+                $attach = \Swift_Attachment::fromPath($path)->setFilename($fileName);
+                $message->attach($attach);
+            }
 
             // add addresses
-            foreach ($to as $name => $address)
-                $this->phpmailer->AddAddress($address, (!is_numeric($name))?$name:'');
+            $message->setTo($to);
 
             // try send 
-            if($this->phpmailer->Send()){
+            if($res = $this->mailer->send($message)){
                 $status = 'ok';
-                $res = TRUE;
             }
             else{
                 $status = 'error';
-                $error = $this->phpmailer->ErrorInfo;
-                $res = FALSE;
+                $error = 'Internal system error';
             }
         } catch (\Exception $e) {
             $status = 'error';
@@ -118,7 +117,7 @@ class Mailer
         // drow into .log file
         $this->log($to, $status, $error, $subject);
 
-        return $res;
+        return !!$res;
     }
 
 
@@ -131,13 +130,13 @@ class Mailer
      * @param  string  $subject
      * @return void
      */
-    private function log($to = array(), $status = '', $error = FALSE, $subject = '')
+    private function log($to = [], $status = '', $error = FALSE, $subject = '')
     {
         // add records to the log
-        $this->log->addInfo("Status: ".$status."\n", [$subject, $to]);
+        $this->log->addInfo('Try send email. Result - '.$status."\n", [$subject, $to]);
 
         if($error)
-            $this->log->addError("Error: ".$error."\n");
+            $this->log->addError('Error: '.$error."\n");
     }
 }
 
