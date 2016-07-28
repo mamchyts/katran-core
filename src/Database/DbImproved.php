@@ -147,6 +147,13 @@ class DbImproved extends Db
                 $res['sql'][] = $w[0].' '.$w[1].' ?';
                 $res['value'][] = $w[2];
             }
+            elseif(sizeof($w) === 2){
+                $res['sql'][] = $w[0];
+                $res['value'][] = $w[1];
+            }
+            elseif(sizeof($w) === 1){
+                $res['sql'][] = $w[0];
+            }
         }
 
         $res['sql'] = implode(' AND ', $res['sql']);

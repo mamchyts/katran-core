@@ -176,14 +176,14 @@ class Db
      * [getFields description]
      * @param  string  $sql         [description]
      * @param  array   $whereValues [description]
-     * @param  boolean $not_empty   [description]
+     * @param  boolean $notEmpty    [description]
      * @return array
      */
-    public function getFields($sql = '', $whereValues = [], $not_empty = TRUE)
+    public function getFields($sql = '', $whereValues = [], $notEmpty = TRUE)
     {
         $this->query($sql, $whereValues);
         $rows = $this->result->fetchAll(\PDO::FETCH_COLUMN, 0);
-        return (empty($rows) && $not_empty)?[0]:$rows;
+        return (empty($rows) && $notEmpty)?[0]:$rows;
     }
 
 
