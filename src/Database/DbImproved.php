@@ -46,6 +46,11 @@ class DbImproved extends Db
         foreach($data as $key=>$d){
             if(in_array($key, $this->fields)){
                 $sql[] = '`'.$key.'` = ?';
+
+                // fix for save array value
+                if(is_array($d) || is_object($d))
+                    $d = json_encode($d);
+
                 $bindParams[] = $d;
             }
         }
@@ -75,6 +80,10 @@ class DbImproved extends Db
         foreach($data as $key=>$d){
             if(in_array($key, $this->fields)){
                 $fields[] = $key;
+
+                // fix for save array value
+                if(is_array($d) || is_object($d))
+                    $d = json_encode($d);
 
                 $sql[] = '?';
                 $bindParams[] = $d;
