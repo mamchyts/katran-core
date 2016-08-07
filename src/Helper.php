@@ -188,6 +188,7 @@ class Helper
         $app->setContainerVar('_aliasPage', 'error.php');
 
         // set error text into 'error layout' and display them
+        header('HTTP/1.1 500 Internal Server Error');
         $app->getAliasContent($strHistory);
         exit(0);
     }
