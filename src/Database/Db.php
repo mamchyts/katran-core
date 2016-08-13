@@ -17,6 +17,7 @@ use Katran\Helper;
  */
 class Db
 {
+
     /**
      * Table name
      * @var string
@@ -40,6 +41,18 @@ class Db
      * @var array
      */
     private $fullFields = [];
+
+    /**
+     * Array of connections
+     * @var string
+     */
+    private static $pdoArray = [];
+
+    /**
+     * Tables array
+     * @var string
+     */
+    public static $tables = [];
 
     /**
      * Names of columns
@@ -80,21 +93,18 @@ class Db
         if(empty($config))
             $config = Helper::_cfg('db');
 
-        static $tables = [];
-        static $pdoArray = [];
-
         $pdoHash = $config['host'].'::'.$config['name'].'::'.$config['port'].'::'.$config['user'];
 
-        if(isset($pdoArray[$pdoHash])){
-            $pdo = $pdoArray[$pdoHash];
+        if(isset(self::$pdoArray[$pdoHash])){
+            $pdo = self::$pdoArray[$pdoHash];
         }
         else{
             // call constructor
             $db = new Db($config);
 
             $pdo = $db->pdo;
-            $pdoArray[$pdoHash] = $pdo;
-            $tables[$pdoHash] = $db->getFields('SHOW TABLES;');
+            self::$pdoArray[$pdoHash] = $pdo;
+            self::$tables[$pdoHash] = $db->getFields('SHOW TABLES;');
         }
 
         // if get already DbImproved child
@@ -102,7 +112,7 @@ class Db
             $obj = $dbModel;
         }
         // if we already have such table
-        elseif(in_array($dbModel, $tables[$pdoHash])){
+        elseif(in_array($dbModel, self::$tables[$pdoHash])){
             $obj = new DbImproved($dbModel);
         }
         else{
