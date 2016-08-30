@@ -135,7 +135,7 @@ class Url
      */
     public function setParam($var, $value = 0)
     {
-        $this->args[$var] = trim($value);
+        $this->args[$var] = is_numeric($value)?$value:trim($value);
     }
 
 
@@ -192,7 +192,8 @@ class Url
      */
     public function deleteParam($var)
     {
-        unset($this->args[$var]);
+        if(isset($this->args[$var]))
+            unset($this->args[$var]);
     }
 }
 
