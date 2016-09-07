@@ -259,4 +259,20 @@ class Db
     {
         return $this->pdo;
     }
+
+
+    /**
+     * Function escape string
+     *
+     * @param    string   $var
+     * @return   string
+     * @access   public
+     */
+    public function escape($var = '', $isTrim = true)
+    {
+        if($isTrim)
+            $var = trim($var);
+
+        return $this->getConnection()->quote($var);
+    }
 }
