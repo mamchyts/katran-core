@@ -367,7 +367,7 @@ class Application extends Controller
 
         $tmp = [];
         foreach($action as $key=>$act){
-            preg_match('/(controller=[\'|"]?([[:alnum:]_]+)[\'|"]?)[\s]*(action=[\'|"]?([[:alnum:]_]+)[\'|"]?)/i', $act, $_controller);
+            preg_match('/(controller=[\'|"]?([[:alnum:]_-]+)[\'|"]?)[\s]*(action=[\'|"]?([[:alnum:]_-]+)[\'|"]?)/i', $act, $_controller);
 
             // create controller object (if exists)
             if(sizeof($_controller) === 5){
@@ -375,7 +375,7 @@ class Application extends Controller
                 $controller     = '\\'.$area.'\\Controller\\'.ucfirst($_controller[2]);
                 $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($_controller[2]).'.php';
                 $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
-                $actMethod      = str_replace('_', '', $_controller[4]).'Action';
+                $actMethod      = str_replace(['-', '_'], '', $_controller[4]).'Action';
 
                 if(!file_exists($classFilePath))
                     trigger_error('File: <em>'.$classFilePath.'</em>. Not found.');
