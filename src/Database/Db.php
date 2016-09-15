@@ -102,6 +102,9 @@ class Db
             // call constructor
             $db = new Db($config);
 
+            // set charset
+            $db->query('SET NAMES '.$config['charset'].';');
+
             $pdo = $db->pdo;
             self::$pdoArray[$pdoHash] = $pdo;
             self::$tables[$pdoHash] = $db->getFields('SHOW TABLES;');
