@@ -45,6 +45,7 @@ class Mailer
         }
         else{
             $transport = \Swift_MailTransport::newInstance();
+            $transport->setExtraParams('');
         }
 
         // Create the Mailer using your created Transport
