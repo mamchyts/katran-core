@@ -139,9 +139,9 @@ class Db
      * @param   array   $whereValues [description]
      * @param   string  $type        [description]
      * @return  mixed
-     * @access  public
+     * @access  protected
      */
-    public function query($sql = '', $whereValues = [], $type = '')
+    protected function query($sql = '', $whereValues = [], $type = '')
     {
         if(trim($sql) === '')
             trigger_error(sprintf(Helper::_msg('mysql'), 'Empty request to SQL server'));
@@ -165,9 +165,8 @@ class Db
         }
 
         // insert() must return ID
-        if($type === 'insert'){
+        if($type === 'insert')
             return $this->pdo->lastInsertId();
-        }
     }
 
 
@@ -177,11 +176,11 @@ class Db
      * @param  array  $whereValues [description]
      * @return mixed
      */
-    public function getField($sql = '', $whereValues = [])
+    protected function getField($sql = '', $whereValues = [])
     {
         $this->query($sql, $whereValues);
         $row = $this->result->fetch(\PDO::FETCH_NUM);
-        return $row[0];
+        return !empty($row[0])?$row[0]:null;
     }
 
 
@@ -192,7 +191,7 @@ class Db
      * @param  boolean $notEmpty    [description]
      * @return array
      */
-    public function getFields($sql = '', $whereValues = [], $notEmpty = TRUE)
+    protected function getFields($sql = '', $whereValues = [], $notEmpty = true)
     {
         $this->query($sql, $whereValues);
         $rows = $this->result->fetchAll(\PDO::FETCH_COLUMN, 0);
@@ -207,7 +206,7 @@ class Db
      * @param  boolean $assoc       [description]
      * @return hash|array
      */
-    public function getRow($sql = '', $whereValues = [], $assoc = true)
+    protected function getRow($sql = '', $whereValues = [], $assoc = true)
     {
         $this->query($sql, $whereValues);
         return $this->result->fetch(($assoc)?\PDO::FETCH_ASSOC:\PDO::FETCH_NUM);
@@ -220,7 +219,7 @@ class Db
      * @param  array  $whereValues
      * @return array
      */
-    public function getRows($sql = '', $whereValues = [])
+    protected function getRows($sql = '', $whereValues = [])
     {
         $this->query($sql, $whereValues);
         return $this->result->fetchAll(\PDO::FETCH_ASSOC);
@@ -244,9 +243,9 @@ class Db
      *
      * @param   string $table
      * @return  string
-     * @access  public
+     * @access  protected
      */
-    public function setTable($table = '')
+    protected function setTable($table = '')
     {
         return $this->table = $table;
     }
@@ -256,9 +255,9 @@ class Db
      * Function return database connection
      *
      * @return  mixed
-     * @access  public
+     * @access  private
      */
-    public function getConnection()
+    private function getConnection()
     {
         return $this->pdo;
     }

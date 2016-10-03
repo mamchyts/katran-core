@@ -23,7 +23,7 @@ class DbImproved extends Db
      */
     public function __construct($table = null)
     {
-        if(!empty($table))
+        if (!empty($table))
             parent::setTable($table);
     }
 
@@ -43,12 +43,12 @@ class DbImproved extends Db
         $bindParams = [];
 
         // escape input data
-        foreach($data as $key=>$d){
-            if(in_array($key, $this->fields)){
+        foreach ($data as $key=>$d) {
+            if (in_array($key, $this->fields)) {
                 $sql[] = '`'.$key.'` = ?';
 
                 // fix for save array value
-                if(is_array($d) || is_object($d))
+                if (!is_scalar($d))
                     $d = json_encode($d);
 
                 $bindParams[] = $d;
@@ -77,12 +77,12 @@ class DbImproved extends Db
         $bindParams = [];
 
         // escape input data
-        foreach($data as $key=>$d){
-            if(in_array($key, $this->fields)){
+        foreach ($data as $key=>$d) {
+            if (in_array($key, $this->fields)) {
                 $fields[] = $key;
 
                 // fix for save array value
-                if(is_array($d) || is_object($d))
+                if (!is_scalar($d))
                     $d = json_encode($d);
 
                 $sql[] = '?';
@@ -116,8 +116,8 @@ class DbImproved extends Db
 
         $sql = [];
         $bindParams = [];
-        foreach($data as $key=>$d){
-            if(in_array($key, $this->fields)){
+        foreach ($data as $key=>$d) {
+            if (in_array($key, $this->fields)) {
                 $sql[] = '`'.$key.'` = ?';
                 $bindParams[] = $d;
             }
@@ -134,9 +134,9 @@ class DbImproved extends Db
      * @param   array|hash $where
      * @param   array|hash $map
      * @return  string
-     * @access  public
+     * @access  protected
      */
-    public function _parseWhere($where = [], $map = [])
+    protected function _parseWhere($where = [], $map = [])
     {
         $res = [
             'sql' => [],
@@ -144,29 +144,15 @@ class DbImproved extends Db
         ];
 
         // compile to $res
-        foreach($where as $w){
-            if(sizeof($w) === 3){
-                if(isset($map[$w[0]]))
-                    $w[0] = $map[$w[0]];
-
-                // for LIKE add %
-                if(strtolower($w[1]) === 'like')
-                    $w[2] = '%'.$w[2].'%';
-
-                $res['sql'][] = $w[0].' '.$w[1].' ?';
-                $res['value'][] = $w[2];
-            }
-            elseif(sizeof($w) === 2){
-                $res['sql'][] = $w[0];
-                $res['value'][] = $w[1];
-            }
-            elseif(sizeof($w) === 1){
-                $res['sql'][] = $w[0];
-            }
+        if (sizeof($where) === 2) {
+            $res['sql'] = $where[0];
+            $res['value'] = $where[1];
+        }
+        elseif (sizeof($where) === 1) {
+            $res['sql'] = $where[0];
         }
 
-        $res['sql'] = implode(' AND ', $res['sql']);
-        if(empty($res['sql']))
+        if (empty($res['sql']))
             $res['sql'] = 1;
 
         return $res;
@@ -206,24 +192,41 @@ class DbImproved extends Db
         $where = $this->_parseWhere($where);
 
         // parse sorter
-        if(is_string($sorter) && ($sorter !== ''))
+        if (is_string($sorter) && ($sorter !== ''))
             $order = ' ORDER BY '.$sorter;
-        elseif(is_array($sorter) && sizeof($sorter)){
+        elseif (is_array($sorter) && sizeof($sorter)) {
             $keys = array_keys($sorter);
             $sorterValues = array_values($sorter);
             $order = ' ORDER BY '.$keys[0].' '.$sorterValues[0];
         }
 
         //parse pager
-        if(is_integer($pager))
+        if (is_integer($pager))
             $limit = ' LIMIT 0, '.$pager;
-        elseif(is_array($pager) && (count($pager) > 0)){
+        elseif (is_array($pager) && (count($pager) > 0)) {
             $limit = ' LIMIT '.((isset($pager[1]))?$pager[0]:0).', '.((isset($pager[1]))?$pager[1]:$pager[0]);
         }
 
         // create and send sql request
         $sql = 'SELECT * FROM `'.$this->getTable().'` WHERE '.$where['sql'].$order.$limit;
         return $this->getRows($sql, $where['value']);
+    }
+
+
+    /**
+     * Function return one row from database by $where, $pager and $sorter
+     *
+     * @param  array   $where
+     * @param  mixed   $pager
+     * @param  mixed   $sorter
+     * @return array
+     * @access public
+     * @see    self::findBy()
+     */
+    public function findByOne($where = [], $pager = [], $sorter = [])
+    {
+        $rows = $this->findBy($where, $pager, $sorter);
+        return sizeof($rows)?array_shift($rows):[];
     }
 
 
@@ -247,29 +250,29 @@ class DbImproved extends Db
         // Get count of possibly rows if count = 0  - return []
         $sql = 'SELECT COUNT(id) FROM `'.$this->getTable().'` WHERE '.$where['sql'];
         $count = $this->getField($sql, $where['value']);
-        if(intval($count) === 0)
+        if (intval($count) === 0)
             return [];
 
         // parse sorter
-        if(is_string($sorter) && ($sorter !== ''))
+        if (is_string($sorter) && ($sorter !== ''))
             $order = ' ORDER BY '.$sorter;
-        elseif(is_object($sorter)){
+        elseif (is_object($sorter)) {
             // Work with class Sorter.
             $order = ' ORDER BY '.$sorter->getOrder($this->fields);
         }
 
         //parse pager
-        if(is_integer($pager))
+        if (is_integer($pager))
             $limit = ' LIMIT '.$pager;
-        elseif(is_array($pager) && (count($pager) > 0)){
-            if(isset($pager['from']))
+        elseif (is_array($pager) && (count($pager) > 0)) {
+            if (isset($pager['from']))
                 $from = intval($pager['from']);
             else
                 $from = 0;
 
             $limit = ' LIMIT '.$from.', '.intval($pager['to']-$from);
         }
-        elseif(is_object($pager)){
+        elseif (is_object($pager)) {
             // Work with class Pager.
             $pager->init($count);
             $limit = ' LIMIT '.$pager->getLimit();
@@ -352,7 +355,7 @@ class DbImproved extends Db
     public function getHash($sql = FALSE, $id = 'id', $title = 'title')
     {
         // create and send sql request
-        if($sql === FALSE)
+        if ($sql === FALSE)
             $sql = 'SELECT `'.$id.'`, `'.$title.'` FROM `'.$this->getTable().'` ORDER BY `'.$title.'` ASC';
 
         $hash = [];

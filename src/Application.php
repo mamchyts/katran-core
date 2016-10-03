@@ -5,7 +5,7 @@
 namespace Katran;
 
 use Katran\Library\Timer;
-use Katran\Model\Accounts;
+use Katran\Model\Account;
 
 /**
  * Application Class
@@ -84,8 +84,8 @@ class Application extends Controller
     public function process()
     {
         switch ($this->container->get('_area')) {
-            case Accounts::AREA_ADMIN:
-            case Accounts::AREA_MEMBER:
+            case Account::AREA_ADMIN:
+            case Account::AREA_MEMBER:
                 // redirect to login page
                 if(!isset($_SESSION[$this->container->get('_area')]) && !in_array($this->container->get('_action'), ['login', 'do_login'])){
                     $this->container->set('_controller', 'account');
@@ -97,10 +97,10 @@ class Application extends Controller
                 }
                 break;
             default:
-                if(!isset($_SESSION[Accounts::AREA_VISITOR])){
-                    $_SESSION[Accounts::AREA_VISITOR]['id'] = 0;
-                    $_SESSION[Accounts::AREA_VISITOR]['fname'] = 'Гость';
-                    $_SESSION[Accounts::AREA_VISITOR]['lname'] = '';
+                if(!isset($_SESSION[Account::AREA_VISITOR])){
+                    $_SESSION[Account::AREA_VISITOR]['id'] = 0;
+                    $_SESSION[Account::AREA_VISITOR]['fname'] = 'Гость';
+                    $_SESSION[Account::AREA_VISITOR]['lname'] = '';
                 }
                 break;
         }

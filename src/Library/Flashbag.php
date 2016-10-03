@@ -10,7 +10,7 @@ namespace Katran\Library;
 class Flashbag
 {
     /**
-     * Flash messages' key
+     * Flash key
      */
     const SESSION_KEY = 'Katran\Library\Flashbag';
 
@@ -25,19 +25,21 @@ class Flashbag
     /**
      * [add description]
      * @param string $type    [description]
-     * @param string $message [description]
+     * @param mixed  $message [description]
      */
     public static function add($type, $message)
     {
         // init
-        if(empty($_SESSION[self::SESSION_KEY]))
-            $_SESSION[self::SESSION_KEY] = [];
+        if (!self::has($type))
+            $_SESSION[self::SESSION_KEY][$type] = [];
 
-        if (self::has($type)) {
+        if (is_scalar($message)) {
             array_push($_SESSION[self::SESSION_KEY][$type], $message);
         }
-        else {
-            $_SESSION[self::SESSION_KEY][$type][] = $message;
+        elseif (is_array($message)) {
+            foreach ($message as $m) {
+                self::add($type, $m);
+            }
         }
     }
 
@@ -76,7 +78,7 @@ class Flashbag
      */
     public static function all()
     {
-        if(empty($_SESSION[self::SESSION_KEY]))
+        if (empty($_SESSION[self::SESSION_KEY]))
             return [];
 
         $return = $_SESSION[self::SESSION_KEY];

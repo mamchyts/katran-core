@@ -24,9 +24,10 @@ class Controller
      * @param  string  $url
      * @param  string  $error
      * @param  string  $info
+     * @param  boolean $is301Redirect
      * @return void
      */
-    public function forward($url, $error = '', $info = '')
+    public function forward($url, $error = '', $info = '', $is301Redirect = false)
     {
         // save messages
         if(!empty($error))
@@ -34,7 +35,9 @@ class Controller
         if(!empty($info))
             Flashbag::add(Flashbag::TYPE_INFO, $info);
 
-        header('HTTP/1.1 301 Moved Permanently');
+        if($is301Redirect)
+            header('HTTP/1.1 301 Moved Permanently');
+
         Header('Location: '.$url);
         exit();
     }
@@ -78,7 +81,7 @@ class Controller
      */
     public function addError($error = '')
     {
-        if(is_string($error))
+        if(is_scalar($error))
             $error = [$error];
 
         $this->errors = array_merge($this->errors, $error);

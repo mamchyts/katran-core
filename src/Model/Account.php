@@ -1,6 +1,6 @@
 <?php
 /**
- * The file contains class Accounts() extends DbImproved()
+ * The file contains class Account() extends DbImproved()
  */
 namespace Katran\Model;
 
@@ -13,7 +13,7 @@ use Katran\Helper;
  * @package Model
  * @see     DbImproved()
  */
-class Accounts extends DbImproved
+class Account extends DbImproved
 {
     // Available values for area
     const AREA_ADMIN = 'admin';
@@ -28,7 +28,6 @@ class Accounts extends DbImproved
      * Constructor set table
      *
      * @return  void
-     * @version 2016-03-30
      * @access  public
      */
     public function __construct()
