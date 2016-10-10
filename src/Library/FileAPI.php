@@ -6,6 +6,7 @@ namespace Katran\Library;
 
 /**
  * FileAPI class
+ * @see https://github.com/mailru/FileAPI/blob/master/server/FileAPI.class.php
  */
 class FileAPI {
     const OK = 200;

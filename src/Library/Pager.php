@@ -118,7 +118,7 @@ class Pager
 
         // first link
         if($this->current != 1)
-            $html .= '<li class=""><a href="'.$href[$this->current-2].'"><i class="material-icons">&#xe5cb;</i></a></li>';
+            $html .= '<li class=""><a href="'.$href[$this->current-2].'"><i class="fa fa-long-arrow-left" aria-hidden="true"></i></li>';
 
         if($this->pages <= 9){
             foreach($href as $key=>$a){
@@ -175,7 +175,7 @@ class Pager
 
         // first link
         if($this->current != $this->pages)
-            $html .= '<li class=""><a href="'.$href[$this->current].'"><i class="material-icons">&#xe5cc;</i></a></li>';
+            $html .= '<li class=""><a href="'.$href[$this->current].'"><i class="fa fa-long-arrow-right" aria-hidden="true"></i></a></li>';
 
         $html .= '</ul></div>';
         $this->url->setParam('page', $this->current);

@@ -32,7 +32,7 @@ class Helper
      */
     public static function _substr($str = '', $start = 0, $length = 0, $encoding = 'utf-8')
     {
-        if(function_exists('mb_substr'))
+        if (function_exists('mb_substr'))
             return mb_substr($str, $start, $length, $encoding);
         else
             return substr($str, $start, $length);
@@ -94,17 +94,17 @@ class Helper
      * @param     boolean     $addCorrect
      * @return    void
      */
-    public static function _date($format = 'Y-m-d H:i:s', $time = FALSE, $addCorrect = false)
+    public static function _date($format = 'Y-m-d H:i:s', $time = false, $addCorrect = false)
     {
-        if(!$time)
+        if (!$time)
             $time = time();
-        elseif(!is_numeric($time))
+        elseif (!is_numeric($time))
             $time = strtotime($time);
 
-        if(($format === FALSE) || (trim($format) === ''))
+        if (($format === false) || (trim($format) === ''))
             $format = 'Y-m-d H:i:s';
 
-        if($addCorrect)
+        if ($addCorrect)
             $time += self::_cfg('date_correct');
 
         $date = date($format, $time);
@@ -123,11 +123,11 @@ class Helper
     public static function _errorHandler($errno = 0, $errstr = '', $errfile = '', $errline = 0)
     {
         // need for @
-        if(error_reporting() === 0)
+        if (error_reporting() === 0)
             return false;
 
         // if console error
-        if(php_sapi_name() === 'cli'){
+        if (php_sapi_name() === 'cli') {
             $str = 'Error code: '.$errno."\n".
                     'Message: '.$errstr."\n".
                     'File: '.$errfile."\n".
@@ -147,13 +147,13 @@ class Helper
                 'Url: '.($_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'])
              , self::_cfg('error_log'));
 
-        $history = debug_backtrace();
+        $history = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
         $strHistory = '<table border=0 cellspadding="0" class="debugTable">';
         $strHistory .= '<tr><td colspan=4>Url: '.($_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING']).'</td></tr>';
         $strHistory .= '<tr><td colspan=4>&nbsp;</td></tr>';
         $strHistory .= '<tr><td colspan=4 style="height:40px;">'.$errno.':&nbsp;&nbsp; Error text: "'.$errstr.'"&nbsp;&nbsp;=> '.$errfile.' : line '.$errline.'</td></tr>';
-        for($i = count($history)-1; $i >= 0; $i--){
+        for($i = count($history)-1; $i >= 0; $i--) {
             $strHistory .= '<tr>';
             $strHistory .= '<td>['.(count($history)-$i-1).'] =></td>';
             $strHistory .= '<td>'.((isset($history[$i]["file"]))?$history[$i]["file"]:'&nbsp;').'</td>';
@@ -169,15 +169,15 @@ class Helper
         $strHistory .= '<tr><td colspan=4>SERVER: <pre>'.print_r($_SERVER,1).'</pre></td></tr>';
         $strHistory .= '</table>';
 
-        if(self::_cfg('send_bug_to_email') && (strpos(self::_cfg('send_bug_to_email'), '@') !== false)){
+        if (self::_cfg('send_bug_to_email') && (strpos(self::_cfg('send_bug_to_email'), '@') !== false)) {
             $mailer = new Mailer();
             $mailer->send(self::_cfg('send_bug_to_email'), '_error()', $strHistory);
         }
 
         $area = 'admin';
         $h = $history[sizeof($history)-1];
-        if(!empty($h['object']) && ($h['object'] instanceof \Katran\Application)){
-            if($h['object']->getArea())
+        if (!empty($h['object']) && ($h['object'] instanceof \Katran\Application)) {
+            if ($h['object']->getArea())
                 $area = $h['object']->getArea();
         }
 
@@ -201,13 +201,13 @@ class Helper
      * @param     boolen
      * @return    string
      */
-    public static function _d($var, $die = FALSE)
+    public static function _d($var, $die = true)
     {
-        $error =  '<hr/><pre>';
-        $error .= print_r($var, TRUE);
+        $error  = '<hr/><pre>';
+        $error .= print_r($var, true);
         $error .= '</pre><hr/>';
         echo $error; 
-        if($die)
+        if ($die)
             die();
     }
 
@@ -234,7 +234,7 @@ class Helper
     {
         $tmp = self::$storage['_cfg'];
         foreach (func_get_args() as $key) {
-            if(isset($tmp[$key])){
+            if (isset($tmp[$key])) {
                 $tmp = $tmp[$key];
             }
         }
@@ -263,12 +263,12 @@ class Helper
      * @param   string  $lang
      * @return  string
      */
-    public static function _msg($var, $lang = FALSE)
+    public static function _msg($var, $lang = false)
     {
-        if($lang === FALSE)
+        if ($lang === false)
             $lang = self::_cfg('lang');
 
-        if(isset(self::$storage['_msg'][$var][$lang]))
+        if (isset(self::$storage['_msg'][$var][$lang]))
             return self::$storage['_msg'][$var][$lang];
         else
             return '';
@@ -284,20 +284,20 @@ class Helper
      * @return    mixed
      * @access    public
      */
-    public static function _debugStore($name, $var = FALSE, $addInArray = FALSE)
+    public static function _debugStore($name, $var = false, $addInArray = false)
     {
-        if(!isset($debugStore))
+        if (!isset($debugStore))
             static $debugStore = [];
 
-        if($var !== FALSE){
-            if($addInArray)
+        if ($var !== false) {
+            if ($addInArray)
                 $debugStore[$name][] = $var;
             else
                 $debugStore[$name] = $var;
             return 0;
         }
 
-        elseif(isset($debugStore[$name]))
+        elseif (isset($debugStore[$name]))
             return $debugStore[$name];
         else
             return [];
@@ -311,16 +311,16 @@ class Helper
      * @param     string    $file
      * @return    void
      */
-    public static function _log($string = '', $file = FALSE)
+    public static function _log($string = '', $file = false)
     {
-        if(trim($string) === '')
-            return FALSE;
+        if (trim($string) === '')
+            return false;
 
         // path to file
         $path = empty($file)?self::_cfg('log'):$file;
 
         // create dir if need 
-        if(!file_exists(dirname($path)))
+        if (!file_exists(dirname($path)))
             self::_mkdir(dirname($path));
 
         // add records to the log
@@ -339,15 +339,15 @@ class Helper
      * @return  void
      * @access  public
      */
-    public static function _menu($menu = '', $return = FALSE, $returnTitle = false)
+    public static function _menu($menu = '', $return = false, $returnTitle = false)
     {
-        if(!isset($store))
+        if (!isset($store))
             static $store = null;
 
-        if($return){
+        if ($return) {
             $res = true;
 
-            if(is_array($store)){
+            if (is_array($store)) {
                 $res = $store[1];
                 $tmp = $store[0];
             }
@@ -356,7 +356,7 @@ class Helper
             }
 
             // need for show title in admin layout
-            if($returnTitle)
+            if ($returnTitle)
                 return ($res === true)?'':$res;
 
             return (($tmp === $menu) || strstr($tmp, $menu.'-') !== false);
@@ -441,7 +441,7 @@ class Helper
     public static function _jsEscape($str = '')
     {
         $str = trim($str);
-        if(!is_numeric($str))
+        if (!is_numeric($str))
             $str = str_replace(['"'], ['&quot;'], $str);
 
 

@@ -41,17 +41,19 @@ class FileHelper
 
         // Load the mime types and set a default mime if we can't find it
         $mimes = self::getAllMimes();
-        if (!isset($mimes[$extension]))
+        if (!isset($mimes[$extension])) {
             $mime = 'application/octet-stream';
-        else
+        }
+        else {
             $mime = (is_array($mimes[$extension])) ? $mimes[$extension][0] : $mimes[$extension];
+        }
 
         // clean buffer
         if (ob_get_level())
             ob_end_clean();
 
         // Generate the server headers
-        if (strpos($_SERVER['HTTP_USER_AGENT'], "MSIE") !== FALSE){
+        if (strpos($_SERVER['HTTP_USER_AGENT'], "MSIE") !== FALSE) {
             header('Content-Type: "'.$mime.'"');
             header('Content-Disposition: attachment; filename="'.$file_name.'"');
             header('Expires: 0');
@@ -60,7 +62,7 @@ class FileHelper
             header('Pragma: public');
             header("Content-Length: ".strlen($data));
         }
-        else{
+        else {
             header('Content-Type: "'.$mime.'"');
             header('Content-Disposition: attachment; filename="'.$file_name.'"');
             header("Content-Transfer-Encoding: binary");
@@ -68,6 +70,7 @@ class FileHelper
             header('Pragma: no-cache');
             header("Content-Length: ".strlen($data));
         }
+
         exit($data);
     }
 
@@ -122,7 +125,7 @@ class FileHelper
     public static function getAllMimes()
     {
         static $mimes;
-        if(empty($mimes)){
+        if (empty($mimes)) {
             include(__DIR__.'/other/mimes.php');
         }
 
@@ -144,7 +147,7 @@ class FileHelper
 
         $extention = '';
         foreach ($mimes as $key => $value) {
-            if( ($value === $mime) || (is_array($value) && in_array($mime, $value)) ){
+            if (($value === $mime) || (is_array($value) && in_array($mime, $value))) {
                 $extention = $key;
                 break;
             }

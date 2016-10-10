@@ -41,13 +41,13 @@ class Sorter
      * Path to image
      * var string
      */
-    private $imgAsc = '<i class="material-icons">&#xe5d8;</i>';
+    private $imgAsc = '<i class="fa fa-long-arrow-up" aria-hidden="true"></i>';
 
     /**
      * Path to image
      * var string
      */
-    private $imgDesc = '<i class="material-icons">&#xe5db;</i>';
+    private $imgDesc = '<i class="fa fa-long-arrow-down" aria-hidden="true"></i>';
 
 
     /**
