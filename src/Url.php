@@ -106,14 +106,13 @@ class Url
             if (isset($this->args['item'])){
                 $this->path .= '/'.$this->args['item'];
                 unset($this->args['item']);
-
-                if (isset($this->args['action'])){
-                    unset($this->args['action']);                    
-                }
             }
 
             if (isset($this->args['act'])) {
                 unset($this->args['act']);
+            }
+            if (isset($this->args['action'])){
+                unset($this->args['action']);
             }
         }
         elseif (isset($this->args['alias'])){
