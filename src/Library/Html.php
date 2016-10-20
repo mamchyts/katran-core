@@ -16,23 +16,25 @@ class Html
      *
      * @param     array    $vars
      * @param     mixed    $select
-     * @param     boolean  $empty_first
+     * @param     boolean  $emptyFirst
      * @return    string
      * @access    public
-     * @version   2012-02-10
      */
-    public static function createSelect($vars = array(), $select = null, $empty_first = false)
+    public static function createSelect($vars = array(), $select = null, $emptyFirst = false)
     {
         $html = '';
         $selected = '';
 
-        if($empty_first && is_null($select))
+        if ($emptyFirst && is_null($select)) {
             $html .= '<option selected="selected" value="">&nbsp;</option>';
-        elseif($empty_first)
+        }
+        elseif ($emptyFirst) {
             $html .= '<option value="">&nbsp;</option>';
+        }
 
-        foreach($vars as $key=>$title)
+        foreach ($vars as $key=>$title) {
             $html .= '<option value="'.$key.'" '.((($select == $key) && !is_null($select))?'selected="selected"':'').'>'.$title.'</option>';
+        }
 
         return $html;
     }

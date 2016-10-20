@@ -42,12 +42,15 @@ class Validator
      */
     public function setFields($request)
     {
-        if($request instanceof Request)
+        if ($request instanceof Request) {
             $this->fields = $request->serverRequest->getParsedBody();
-        elseif($request instanceof ServerRequest)
+        }
+        elseif ($request instanceof ServerRequest) {
             $this->fields = $request->getParsedBody();
-        elseif(is_array($request))
+        }
+        elseif (is_array($request)) {
             $this->fields = $request;
+        }
     }
 
 
@@ -65,10 +68,11 @@ class Validator
     {
         // If an array was passed via the first parameter instead of individual string
         // values we cycle through it and recursively call this function.
-        if (is_array($field)){
-            foreach ($field as $row){
-                if (!isset($row[0]) || !isset($row[2]))
+        if (is_array($field)) {
+            foreach ($field as $row) {
+                if (!isset($row[0]) || !isset($row[2])) {
                     continue;
+                }
 
                 // If the field label wasn't passed we use the field name
                 $label = (!isset($row[1]))?$row[0] : $row[1];
@@ -78,8 +82,9 @@ class Validator
             return 1;
         }
 
-        if (!is_string($field) || !is_string($rules) || $field == '')
+        if (!is_string($field) || !is_string($rules) || $field == '') {
             return $this;
+        }
 
         // If the field label wasn't passed we use the field name
         $label = ($label == '') ? trim($field) : trim($label);
@@ -88,8 +93,8 @@ class Validator
         $rule  = explode('|', trim($rules));
 
         // We test for the existence of a bracket "[" in the rules.
-        foreach($rule as &$r){
-            if (strpos($r, '[') !== FALSE && preg_match_all('/\[(.*?)\]/', $r, $matches)){
+        foreach ($rule as &$r) {
+            if (strpos($r, '[') !== false && preg_match_all('/\[(.*?)\]/', $r, $matches)) {
                 $pos = strpos($r, '[');
                 $r = array(substr($r, 0, $pos), substr($r, $pos+1, -1));
             }
@@ -118,10 +123,10 @@ class Validator
      */
     private function setError($label = '', $rule = '', $key = '')
     {
-        if(is_array($rule))
-            $error = sprintf(Helper::_msg($rule[0]), $label, $rule[1]);
+        if (is_array($rule))
+            $error = sprintf (Helper::_msg($rule[0]), $label, $rule[1]);
         else
-            $error = sprintf(Helper::_msg($rule), $label);
+            $error = sprintf (Helper::_msg($rule), $label);
 
         $this->errors[$key] = $error;
     }
@@ -136,10 +141,12 @@ class Validator
      */
     public function getErrors($withKey = false)
     {
-        if($withKey)
+        if ($withKey) {
             $errors = $this->errors;
-        else
+        }
+        else {
             $errors = array_values($this->errors);
+        }
 
         return $errors;
     }
@@ -153,7 +160,7 @@ class Validator
      */
     public function hasErrors()
     {
-        return sizeof($this->errors);
+        return sizeof ($this->errors);
     }
 
 
@@ -167,20 +174,21 @@ class Validator
     public function run()
     {
         // If no validation rules
-        if (count($this->rules) === 0)
-            return FALSE;
+        if (count($this->rules) === 0) {
+            return false;
+        }
 
         // Cycle apply rules for each field
-        foreach ($this->rules as $r){
+        foreach ($this->rules as $r) {
             // Check, if we have field for this rule...
-            if (preg_match('/([[:word:].]+)\[([[:word:].]+)\]/i', $r['field'], $field)){
+            if (preg_match('/([[:word:].]+)\[([[:word:].]+)\]/i', $r['field'], $field)) {
                 // if we have field for rule - check rule, else - set error text
-            	if(isset($this->fields[$field[1]][$field[2]])){
+            	if (isset($this->fields[$field[1]][$field[2]])) {
                     $this->check($this->fields[$field[1]][$field[2]], $r);
                 }
                 else{
-                    foreach($r['rule'] as $rule){
-                        if($rule === 'required'){
+                    foreach ($r['rule'] as $rule) {
+                        if ($rule === 'required') {
                             $this->setError($r['label'], 'required', $r['field']);
                             break;
                         }
@@ -189,12 +197,12 @@ class Validator
             }
             else{
                 // if we have field for rule - check rule, else - set error text
-            	if(isset($this->fields[$r['field']])){
+            	if (isset($this->fields[$r['field']])) {
                     $this->check($this->fields[$r['field']], $r);
                 }
                 else{
-                    foreach($r['rule'] as $rule){
-                        if($rule === 'required'){
+                    foreach ($r['rule'] as $rule) {
+                        if ($rule === 'required') {
                             $this->setError($r['label'], 'required', $r['field']);
                             break;
                         }
@@ -219,25 +227,27 @@ class Validator
     private function check($data, $rules)
     {
         // Cycle check each rule and run it
-        foreach ($rules['rule'] as $r){
-            if(is_array($r)){
-                if (!method_exists($this, $r[0]))
+        foreach ($rules['rule'] as $r) {
+            if (is_array($r)) {
+                if (!method_exists($this, $r[0])) {
                     continue;
+                }
 
                 $functionName = $r[0];
                 $result = $this->$functionName($data, $r[1]);
             }
             else{
-                if (!method_exists($this, $r))
+                if (!method_exists($this, $r)) {
                     continue;
+                }
                 $result = $this->$r($data);
             }
 
             // If the rule test negatively.
-            if ($result === FALSE){
+            if ($result === false) {
                 $this->setError($rules['label'], $r, $rules['field']);
             }
-            elseif($result !== TRUE){
+            elseif ($result !== true) {
                 $this->setError($rules['label'], array($r[0], $result), $rules['field']);
             }
         }
@@ -267,7 +277,35 @@ class Validator
     private function trim(&$str)
     {
         $str = trim($str);
-        return TRUE;
+        return true;
+    }
+
+
+    /**
+     * Intval
+     *
+     * @param     mixed    $value
+     * @return    bool
+     * @access    private
+     */
+    private function intval(&$value)
+    {
+        $value = intval($value);
+        return true;
+    }
+
+
+    /**
+     * Floatval
+     *
+     * @param     mixed    $value
+     * @return    bool
+     * @access    private
+     */
+    private function floatval(&$value)
+    {
+        $value = floatval($value);
+        return true;
     }
 
 
@@ -295,27 +333,31 @@ class Validator
      */
     private function match($str, $field)
     {
-        if (isset($this->rules[$field]['label']))
+        if (isset($this->rules[$field]['label'])) {
             $label = $this->rules[$field]['label'];
-        else
+        }
+        else {
             $label = $field;
+        }
 
         // Cycle search field
         foreach ($this->fields as $key=>$f)
         {
-            if(is_array($f)){
+            if (is_array($f)) {
                 foreach ($f as $key_2=>$d)
                 {
-                    if($key.'['.$key_2.']' === $field){
-                        if($str == $d)
-                            return TRUE;
+                    if ($key.'['.$key_2.']' === $field) {
+                        if ($str == $d) {
+                            return true;
+                        }
                     }
                 }
             }
             else{
-                if($key === $field){
-                    if($str == $f)
-                        return TRUE;
+                if ($key === $field) {
+                    if ($str == $f) {
+                        return true;
+                    }
                 }
             }
         }
@@ -333,10 +375,11 @@ class Validator
      */
     private function min_length($str, $val)
     {
-        if (function_exists('mb_strlen'))
-            return (mb_strlen($str, Helper::_cfg('page_charset')) < $val) ? FALSE : TRUE;
+        if (function_exists('mb_strlen')) {
+            return (mb_strlen($str, Helper::_cfg('page_charset')) < $val) ? false : true;
+        }
 
-        return (strlen($str) < $val) ? FALSE : TRUE;
+        return (strlen($str) < $val) ? false : true;
     }
 
 
@@ -350,10 +393,11 @@ class Validator
      */
     private function max_length($str, $val)
     {
-        if (function_exists('mb_strlen'))
-            return (mb_strlen($str, Helper::_cfg('page_charset')) > $val) ? FALSE : TRUE;
+        if (function_exists('mb_strlen')) {
+            return (mb_strlen($str, Helper::_cfg('page_charset')) > $val) ? false : true;
+        }
 
-        return (strlen($str) > $val) ? FALSE : TRUE;
+        return (strlen($str) > $val) ? false : true;
     }
 
 
@@ -367,10 +411,11 @@ class Validator
      */
     function exact_length($str, $val)
     {
-        if (function_exists('mb_strlen'))
-            return (mb_strlen($str, Helper::_cfg('page_charset')) != $val) ? FALSE : TRUE;
+        if (function_exists('mb_strlen')) {
+            return (mb_strlen($str, Helper::_cfg('page_charset')) != $val) ? false : true;
+        }
 
-        return (strlen($str) != $val) ? FALSE : TRUE;
+        return (strlen($str) != $val) ? false : true;
     }
 
 
@@ -383,7 +428,7 @@ class Validator
      */
     private function email($str)
     {
-        return (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $str)) ? FALSE : TRUE;
+        return (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $str)) ? false : true;
     }
 
 
@@ -396,14 +441,16 @@ class Validator
      */
     private function emails($str)
     {
-        if (strpos($str, ',') === FALSE)
+        if (strpos($str, ',') === false) {
             return $this->email(trim($str));
-
-        foreach (explode(',', $str) as $email){
-            if (trim($email) != '' && $this->email(trim($email)) === FALSE)
-                return FALSE;
         }
-        return TRUE;
+
+        foreach (explode(',', $str) as $email) {
+            if (trim($email) != '' && $this->email(trim($email)) === false) {
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -419,22 +466,24 @@ class Validator
         $ip_segments = explode('.', $ip);
 
         // Always 4 segments needed
-        if (count($ip_segments) != 4)
-            return FALSE;
+        if (count($ip_segments) != 4) {
+            return false;
+        }
 
         // IP can not start with 0
-        if ($ip_segments[0][0] == '0')
-            return FALSE;
+        if ($ip_segments[0][0] == '0') {
+            return false;
+        }
 
         // Check each segment
-        foreach ($ip_segments as $segment)
-        {
+        foreach ($ip_segments as $segment) {
             // IP segments must be digits and can not be
             // longer than 3 digits or greater then 255
-            if ($segment == '' || preg_match("/[^0-9]/", $segment) || $segment > 255 || strlen($segment) > 3)
-                return FALSE;
+            if ($segment == '' || preg_match("/[^0-9]/", $segment) || $segment > 255 || strlen($segment) > 3) {
+                return false;
+            }
         }
-        return TRUE;
+        return true;
     }
 
 
@@ -447,7 +496,7 @@ class Validator
      */
     private function alpha($str)
     {
-        return ( ! preg_match("/^([a-z])+$/i", $str)) ? FALSE : TRUE;
+        return ( ! preg_match("/^([a-z])+$/i", $str)) ? false : true;
     }
 
 
@@ -460,7 +509,7 @@ class Validator
      */
     private function alpha_numeric($str)
     {
-        return ( ! preg_match("/^([a-z0-9])+$/i", $str)) ? FALSE : TRUE;
+        return ( ! preg_match("/^([a-z0-9])+$/i", $str)) ? false : true;
     }
 
 
@@ -473,7 +522,7 @@ class Validator
      */
     private function alpha_dash($str)
     {
-        return ( ! preg_match("/^([-a-z0-9_-])+$/i", $str)) ? FALSE : TRUE;
+        return ( ! preg_match("/^([-a-z0-9_-])+$/i", $str)) ? false : true;
     }
 
 
@@ -499,7 +548,7 @@ class Validator
      */
     private function is_numeric($str)
     {
-        return ( ! is_numeric($str)) ? FALSE : TRUE;
+        return ( ! is_numeric($str)) ? false : true;
     }
 
 
@@ -539,8 +588,9 @@ class Validator
      */
     private function more_than($str, $min)
     {
-        if ( ! is_numeric($str))
-            return FALSE;
+        if ( ! is_numeric($str)) {
+            return false;
+        }
 
         return $str > $min;
     }
@@ -556,8 +606,9 @@ class Validator
      */
     private function less_than($str, $max)
     {
-        if ( ! is_numeric($str))
-            return FALSE;
+        if ( ! is_numeric($str)) {
+            return false;
+        }
 
         return $str < $max;
     }
@@ -585,13 +636,15 @@ class Validator
      */
     private function is_natural_no_zero($str)
     {
-        if ( ! preg_match( '/^[0-9]+$/', $str))
-            return FALSE;
+        if ( ! preg_match( '/^[0-9]+$/', $str)) {
+            return false;
+        }
 
-        if ($str == 0)
-            return FALSE;
+        if ($str == 0) {
+            return false;
+        }
 
-        return TRUE;
+        return true;
     }
 
 
@@ -620,13 +673,15 @@ class Validator
      */
     private function prep_url(&$str)
     {
-        if ($str == 'http://' OR $str == '')
+        if (($str === 'http://') || empty($str)) {
             $srt = '';
+        }
 
-        if (substr($str, 0, 7) != 'http://' && substr($str, 0, 8) != 'https://')
+        if (substr($str, 0, 7) != 'http://' && substr($str, 0, 8) != 'https://') {
             $str = 'http://'.$str;
+        }
 
-        return TRUE;
+        return true;
     }
 
 
@@ -641,18 +696,23 @@ class Validator
     {
         $temp = explode(':', $str);
 
-        if(sizeof($temp) == 1)
-            return FALSE;
-
-        foreach($temp as $key=>$t){
-            if($key == 0)
-                if(($t < 0 ) || ($t >= 24 ))
-                    return FALSE;
-            else
-                if(($t < 0 ) || ($t > 60 ))
-                    return FALSE;
+        if (sizeof($temp) === 1) {
+            return false;
         }
 
-        return TRUE;
+        foreach ($temp as $key=>$t) {
+            if ($key == 0) {
+                if (($t < 0 ) || ($t >= 24 )) {
+                    return false;
+                }
+            }
+            else {
+                if (($t < 0 ) || ($t > 60 )) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

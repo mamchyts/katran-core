@@ -45,7 +45,7 @@ class Helper
      * @param  integer $mode [description]
      * @return void
      */
-    public static function _mkdir($dir = '', $mode = 0777)
+    public static function _mkdir($dir = '', $mode = 0644)
     {
         mkdir($dir, $mode, true);
         self::_chmod($dir, $mode);
@@ -58,7 +58,7 @@ class Helper
      * @param  integer $mode       [description]
      * @return void
      */
-    public static function _chmod($dirOrFile = '', $mode = 0777)
+    public static function _chmod($dirOrFile = '', $mode = 0644)
     {
         chmod($dirOrFile, $mode);
     }
@@ -351,7 +351,7 @@ class Helper
                 $res = $store[1];
                 $tmp = $store[0];
             }
-            else{
+            else {
                 $tmp = $store;
             }
 
@@ -361,7 +361,7 @@ class Helper
 
             return (($tmp === $menu) || strstr($tmp, $menu.'-') !== false);
         }
-        else{
+        else {
             $store = $menu;
         }
     }
