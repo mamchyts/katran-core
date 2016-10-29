@@ -90,8 +90,9 @@ class Db
      */
     public static function getModel($dbModel = '', $config = [])
     {
-        if(empty($config))
+        if(empty($config)) {
             $config = Helper::_cfg('db');
+        }
 
         $pdoHash = $config['host'].'::'.$config['name'].'::'.$config['port'].'::'.$config['user'];
 
@@ -125,8 +126,9 @@ class Db
         $obj->pdo = $pdo;
         $obj->fullFields = $obj->getRows('SHOW FIELDS FROM `'.$obj->getTable().'`');
 
-        foreach($obj->fullFields as $f)
+        foreach($obj->fullFields as $f) {
             $obj->fields[] = $f['Field'];
+        }
 
         return $obj;
     }
@@ -143,8 +145,9 @@ class Db
      */
     protected function query($sql = '', $whereValues = [], $type = '')
     {
-        if(trim($sql) === '')
+        if(trim($sql) === '') {
             trigger_error(sprintf(Helper::_msg('mysql'), 'Empty request to SQL server'));
+        }
 
         // try execute SQL query
         Timer::mark('sql_start');
@@ -153,8 +156,9 @@ class Db
         Timer::mark('sql_finish');
 
         // if error
-        if($this->result->errorCode() !== '00000')
+        if($this->result->errorCode() !== '00000') {
             trigger_error(sprintf(Helper::_msg('mysql'), implode('::', $this->result->errorInfo())));
+        }
 
         // if debug On save request into debug store
         if(Helper::_cfg('debug')){
@@ -165,8 +169,9 @@ class Db
         }
 
         // insert() must return ID
-        if($type === 'insert')
+        if($type === 'insert') {
             return $this->pdo->lastInsertId();
+        }
     }
 
 

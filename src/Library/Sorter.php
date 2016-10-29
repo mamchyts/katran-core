@@ -110,8 +110,9 @@ class Sorter
      */
     public function getOrder($map = array())
     {
-        if(!isset($map[$this->field]))
+        if (!isset($map[$this->field])) {
             $map[$this->field] = $this->field;
+        }
 
         return $map[$this->field].' '.$this->by;
     }
@@ -134,7 +135,7 @@ class Sorter
         $totalSort = $this->url->getParam('sort');
 
         // if field is already in sort object
-        if(isset($this->field) && ((isset($this->map[$field]) && ($this->field === $this->map[$field])) || ($this->field === $field))){
+        if(isset($this->field) && ($this->field === $field)){
             if($this->by === 'ASC'){
                 $this->url->setParam('sort', $field.'_desc');
                 $url = $this->url->getUrl(TRUE);

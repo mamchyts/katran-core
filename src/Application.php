@@ -18,14 +18,6 @@ use Katran\Model\Account;
  */
 class Application extends Controller
 {
-
-    /**
-     * Global storage
-     * var string
-     */
-    protected $container = false;
-
-
     /**
      * Constructor
      * Set default varaible
@@ -39,39 +31,43 @@ class Application extends Controller
         Timer::mark('globalStart');
 
         // if we view error text, we already have session
-        if(!isset($_SESSION))
+        if (!isset($_SESSION)) {
             session_start();
+        }
 
         // init obj
-        $this->container = new Container();
+        $this->setContainer(new Container());
 
         // create request object
         $request = new Request();
-        $this->container->set('request', $request);
+        $this->setContainerVar('request', $request);
 
         // need for detect action
         $queryParams = $request->serverRequest->getQueryParams();
 
         // set alias value if exist, or set default `index`
-        $this->container->set('_alias', !empty($queryParams['alias'])?$queryParams['alias']:'index');
+        $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS, !empty($queryParams['alias'])?$queryParams['alias']:'index');
 
         // set controller/action if exist
-        if(!empty($queryParams['controller']))
-            $this->container->set('_controller', $queryParams['controller']);
-        if(!empty($queryParams['action']))
-            $this->container->set('_action', $queryParams['action']);
+        if (!empty($queryParams['controller'])) {
+            $this->setContainerVar(Controller::CONTAINER_VAR_CONTROLLER, $queryParams['controller']);
+        }
+        if (!empty($queryParams['action'])) {
+            $this->setContainerVar(Controller::CONTAINER_VAR_ACTION, $queryParams['action']);
+        }
 
         // if form was send, and submit has special name
         $parsedBody = $request->serverRequest->getParsedBody();
-        if( $submitBtn = !empty($parsedBody['submit'])?$parsedBody['submit']:null ){
+        if ( $submitBtn = !empty($parsedBody['submit'])?$parsedBody['submit']:null ) {
             $submit = explode('|', key($submitBtn));
-            $this->container->set('_controller', $submit[0]);
-            $this->container->set('_action', $submit[1]);
+            $this->setContainerVar(Controller::CONTAINER_VAR_CONTROLLER, $submit[0]);
+            $this->setContainerVar(Controller::CONTAINER_VAR_ACTION, $submit[1]);
         }
 
         // if debug On save request into debug store
-        if(Helper::_cfg('debug'))
-            Helper::_debugStore('request', $this->container->get('request'));
+        if (Helper::_cfg('debug')) {
+            Helper::_debugStore('request', $this->getContainerVar('request'));
+        }
     }
 
 
@@ -83,21 +79,25 @@ class Application extends Controller
      */
     public function process()
     {
-        switch ($this->container->get('_area')) {
+        switch ($this->getContainerVar(Controller::CONTAINER_VAR_AREA)) {
             case Account::AREA_ADMIN:
             case Account::AREA_MEMBER:
                 // redirect to login page
-                if(!isset($_SESSION[$this->container->get('_area')]) && !in_array($this->container->get('_action'), ['login', 'do_login'])){
-                    $this->container->set('_controller', 'account');
-                    $this->container->set('_action', 'login');
+                if ( !isset($_SESSION[$this->getContainerVar(Controller::CONTAINER_VAR_AREA)]) && 
+                    !in_array($this->getContainerVar(Controller::CONTAINER_VAR_ACTION), ['login', 'do_login']))
+                {
+                    $this->setContainerVar(Controller::CONTAINER_VAR_CONTROLLER, 'account');
+                    $this->setContainerVar(Controller::CONTAINER_VAR_ACTION, 'login');
                 }
-                elseif(isset($_SESSION[$this->container->get('_area')]) && !$this->container->get('_controller')){
-                    $this->container->set('_controller', 'account');
-                    $this->container->set('_action', 'stat');
+                elseif ( isset($_SESSION[$this->getContainerVar(Controller::CONTAINER_VAR_AREA)]) && 
+                    !$this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER))
+                {
+                    $this->setContainerVar(Controller::CONTAINER_VAR_CONTROLLER, 'account');
+                    $this->setContainerVar(Controller::CONTAINER_VAR_ACTION, 'stat');
                 }
                 break;
             default:
-                if(!isset($_SESSION[Account::AREA_VISITOR])){
+                if (!isset($_SESSION[Account::AREA_VISITOR])) {
                     $_SESSION[Account::AREA_VISITOR]['id'] = 0;
                     $_SESSION[Account::AREA_VISITOR]['fname'] = 'Гость';
                     $_SESSION[Account::AREA_VISITOR]['lname'] = '';
@@ -109,12 +109,15 @@ class Application extends Controller
         $this->setLayout('./'.ucfirst($this->getArea()).'/View/layout.php');
 
         // run process
-        if($this->container->get('_controller'))
+        if ($this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER)) {
             $this->_processMod();
-        elseif($this->container->get('_alias'))
+        }
+        elseif ($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS)) {
             $this->_processAlias();
-        else
+        }
+        else {
             $this->forward('/404');
+        }
 
         // prepare page response
         $this->_getFullText();
@@ -129,15 +132,17 @@ class Application extends Controller
      */
     private function _processAlias()
     {
-        $rights = $this->_checkPageAlias($this->container->get('_alias'), $this->container->get('_area'));
+        $rights = $this->_checkPageAlias($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS), $this->getContainerVar(Controller::CONTAINER_VAR_AREA));
 
         // 1 - ok, 0 - must be login, -1 - file none exist
-        if($rights === -1)
+        if ($rights === -1) {
             $this->forward('/404');
-        elseif($rights === 0){
+        }
+        elseif ($rights === 0) {
             // access off
-            if(empty($_SESSION[$this->container->get('_area')]))
+            if (empty($_SESSION[$this->getContainerVar(Controller::CONTAINER_VAR_AREA)])) {
                 $this->forward('/401');
+            }
         }
 
         $this->_setHeaderCharset();
@@ -153,40 +158,33 @@ class Application extends Controller
      */
     private function _processMod()
     {
-        if(!$this->container->get('_controller'))
+        if (!$this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER)) {
             trigger_error("Class name: ".__CLASS__.'()  function: '.__FUNCTION__.'()  Request hasn\'t Mod param.');
+        }
 
-        $area           = ucfirst($this->container->get('_area'));
-        $controller     = '\\'.$area.'\\Controller\\'.ucfirst($this->container->get('_controller'));
-        $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($this->container->get('_controller')).'.php';
+        $area           = ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_AREA));
+        $controller     = '\\'.$area.'\\Controller\\'.ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER));
+        $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER)).'.php';
         $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
-        $actMethod      = str_replace('_', '', $this->container->get('_action')).'Action';
+        $actMethod      = str_replace('_', '', $this->getContainerVar(Controller::CONTAINER_VAR_ACTION)).'Action';
 
-        if(!file_exists($classFilePath))
+        if (!file_exists($classFilePath)) {
             trigger_error('File: <em>'.$classFilePath.'</em>. Not found.');
+        }
 
-        // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('call_controller[_processMod]');
+        // call controller and return view
+        $view = $this->callContoller($controller, $actMethod, [$this->getContainerVar('request')]);
 
-        // call controller
-        $obj = new $controller();
-
-        if(!method_exists($obj, $actMethod))
-            trigger_error('Call to undefined method '.$controller.'::'.$actMethod.'()');
-
-        // call method
-        $view = call_user_func_array([$obj, $actMethod], [$this->container->get('request')]);
-
-        // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('call_controller[_processMod]');
+        // controller return incorrect result
+        if( !($view instanceOf View) ) {
+            trigger_error('Controller: '.$controller.'::'.$actMethod.'() - return incorrect result.');
+        }
 
         // parse view for find templates tags
         $templates = $this->getTemplateFromView($viewPath.$view->fileName);
 
         // if view has templates - get their content
-        if(sizeof($templates) > 0){
+        if (sizeof($templates) > 0) {
             $this->parseTemplateFromView($templates, $view);
             $this->getTemplateContent($view);
         }
@@ -195,13 +193,13 @@ class Application extends Controller
         $view->content = $this->_getFileContent($viewPath.$view->fileName, $view->args);
 
         // if view has templates - replace template tags substitute for their content
-        if(sizeof($templates) > 0){
+        if (sizeof($templates) > 0) {
             $this->replaceTemplateTags($view);
         }
 
         // save result
         // it's bad but work quickly
-        $this->container->set('_layoutContent', $view->content);
+        $this->setContainerVar(Controller::CONTAINER_VAR_LAYOUT_CONTENT, $view->content);
     }
 
 
@@ -216,113 +214,106 @@ class Application extends Controller
     private function _checkPageAlias($page, $area)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('_checkPageAlias');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
         $page .= '.php';
 
         // read directory and save results into tmp variable $okFiles
         $okFiles = [];
         $dir = opendir(Helper::_cfg('path_src').'/Common/View/_alias/');
-        while(($f = readdir($dir)) !== FALSE){
-            if(strstr($f, $page) !== FALSE)
+        while(($f = readdir($dir)) !== false) {
+            if (strstr($f, $page) !== false) {
                 $okFiles[] = $f;
+            }
         }
 
         // foreach all matches
         $res = -1;
         $matchesLingth = sizeof($okFiles);
-        if($matchesLingth > 0){
-            for($i = 0; $i < $matchesLingth; ++$i){
+        if ($matchesLingth > 0) {
+            for($i = 0; $i < $matchesLingth; ++$i) {
                 // full match - return 'ok'
-                if($okFiles[$i] === $page){
+                if ($okFiles[$i] === $page) {
                     $res = 1;
-                    $this->container->set('_aliasPage', $okFiles[$i]);
+                    $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_PAGE, $okFiles[$i]);
                     break;
                 }
                 elseif ($okFiles[$i] === $area.'_'.$page) {
                     $res = 0;
-                    $this->container->set('_aliasPage', $okFiles[$i]);
+                    $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_PAGE, $okFiles[$i]);
                     break;
                 }
             }
         }
-        elseif(file_exists(Helper::_cfg('path_src').'/Common/View/_alias/default.php')){
+        elseif (file_exists(Helper::_cfg('path_src').'/Common/View/_alias/default.php')) {
             $res = 1;
-            $this->container->set('_aliasPage', 'default.php');
+            $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_PAGE, 'default.php');
         }
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('_checkPageAlias');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
 
         return $res;
     }
 
 
     /**
-     * Function set layout
-     *
-     * @param    string
-     * @return   void
-     * @access  public
-     */
-    public function setLayout($layout = '')
-    {
-        $this->container->set('_layout', $layout);
-    }
-
-
-    /**
-     * Function get content from file './src/Common/View/_alias/'.$this->container->get('_alias').'.php'
+     * Function get content from file './src/Common/View/_alias/'.$this->getContainerVar(Controller::CONTAINER_VAR_ALIAS).'.php'
      * Used in error handler.
      *
      * @return   void
      * @param  boolean $debugErrorText
      * @access public
      */
-    public function getAliasContent($debugErrorText = FALSE)
+    public function getAliasContent($debugErrorText = false)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('getAliasContent');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
         // get content from alias page.
-        $file = Helper::_cfg('path_src').'/Common/View/_alias/'.$this->container->get('_aliasPage');
+        $file = Helper::_cfg('path_src').'/Common/View/_alias/'.$this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_PAGE);
 
-        if($debugErrorText){
+        if ($debugErrorText) {
             $vars = array('error' => $debugErrorText);
-            $this->container->set('_layoutContent', $this->_getFileContent($file, $vars));
+            $this->setContainerVar(Controller::CONTAINER_VAR_LAYOUT_CONTENT, $this->_getFileContent($file, $vars));
             $this->_getFullText();
             $this->display();
             exit(0);
         }
 
-        $this->container->set('_alias_content_file', $this->_getFileContent($file));
-        $this->_parserAliasFile($this->container->get('_alias_content_file'));
-        if($this->container->get('_alias_content_action') && sizeof($this->container->get('_alias_content_action'))){
-            $this->_processGetModelAction($this->container->get('_alias_content_action'));
+        $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_FILE, $this->_getFileContent($file));
+        $this->_parserAliasFile($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_FILE));
+        if (sizeof($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_ACTION))) {
+            $this->_processGetModelAction($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_ACTION));
 
             // replace tags <action controller="..." action="..."></action> substitute for their content
-            foreach($this->container->get('_alias_content_action') as $tag=>$act){
-                $this->container->set('_alias_content_file', str_replace($tag, $act, $this->container->get('_alias_content_file')));
+            foreach($this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_ACTION) as $tag=>$act) {
+                $replacedAliasFile = str_replace($tag, $act, $this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_FILE));
+                $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_FILE, $replacedAliasFile);
             }
 
-            $this->container->set('_layoutContent', $this->container->get('_alias_content_file'));
+            $this->setContainerVar(Controller::CONTAINER_VAR_LAYOUT_CONTENT, $this->getContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_FILE));
         }
         else{
             $vars = [];
-            $this->container->set('_layoutContent', $this->_getFileContent($file, $vars));
+            $this->setContainerVar(Controller::CONTAINER_VAR_LAYOUT_CONTENT, $this->_getFileContent($file, $vars));
         }
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('getAliasContent');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
     }
 
 
     /**
-     * Function parse file './src/Common/View/_alias/'.$this->container->get('_alias').'.php'
+     * Function parse file './src/Common/View/_alias/'.$this->getContainerVar(Controller::CONTAINER_VAR_ALIAS).'.php'
      *
      * @param    string     $content
      * @return   void
@@ -331,23 +322,25 @@ class Application extends Controller
     private function _parserAliasFile($content)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('_parserAliasFile');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
         preg_match_all('|([<]{1}action([^<]*)[>]{1})([^<]*)([/<]{2}action[>]{1})|i', $content, $action);
-        if(sizeof($action[0]) > 0){
+        if (sizeof($action[0]) > 0) {
             $tmp = [];
-            foreach($action[0] as $act){
+            foreach($action[0] as $act) {
                 $tmp[] = $act;
             }
 
-            $this->container->set('_alias_content_action', $tmp);
+            $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_ACTION, $tmp);
             $tmp = null;
         }
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('_parserAliasFile');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
     }
 
 
@@ -362,44 +355,32 @@ class Application extends Controller
     private function _processGetModelAction($action = [])
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('_processGetModelAction');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
         $tmp = [];
-        foreach($action as $key=>$act){
+        foreach($action as $key=>$act) {
             preg_match('/(controller=[\'|"]?([[:alnum:]_-]+)[\'|"]?)[\s]*(action=[\'|"]?([[:alnum:]_-]+)[\'|"]?)/i', $act, $_controller);
 
             // create controller object (if exists)
-            if(sizeof($_controller) === 5){
-                $area           = ucfirst($this->container->get('_area'));
+            if (sizeof($_controller) === 5) {
+                $area           = ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_AREA));
                 $controller     = '\\'.$area.'\\Controller\\'.ucfirst($_controller[2]);
                 $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($_controller[2]).'.php';
                 $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
                 $actMethod      = str_replace(['-', '_'], '', $_controller[4]).'Action';
 
-                if(!file_exists($classFilePath))
+                if (!file_exists($classFilePath))
                     trigger_error('File: <em>'.$classFilePath.'</em>. Not found.');
 
-                // timer mark
-                if(Helper::_cfg('debug'))
-                    Timer::mark('call_controller[_processGetModelAction]');
-
-                // call controller
-                $obj = new $controller();
-
-                if(!method_exists($obj, $actMethod))
-                    trigger_error('Call to undefined method '.$controller.'::'.$actMethod.'()');
-
-                $view = call_user_func_array([$obj, $actMethod], [$this->container->get('request')]);
-
-                // timer mark
-                if(Helper::_cfg('debug'))
-                    Timer::time('call_controller[_processGetModelAction]');
+                // call controller and return view
+                $view = $this->callContoller($controller, $actMethod, [$this->getContainerVar('request')]);
 
                 $templates = $this->getTemplateFromView($viewPath.$view->fileName);
 
                 // if view has templates - get their content
-                if(sizeof($templates) > 0){
+                if (sizeof($templates) > 0) {
                     $this->parseTemplateFromView($templates, $view);
                     $this->getTemplateContent($view);
                 }
@@ -408,7 +389,7 @@ class Application extends Controller
                 $view->content = $this->_getFileContent($viewPath.$view->fileName, $view->args);
 
                 // if view has templates - replace template tags substitute for their content
-                if(sizeof($templates) > 0){
+                if (sizeof($templates) > 0) {
                     $this->replaceTemplateTags($view);
                 }
 
@@ -421,12 +402,13 @@ class Application extends Controller
         }
 
         // set value
-        $this->container->set('_alias_content_action', $tmp);
+        $this->setContainerVar(Controller::CONTAINER_VAR_ALIAS_CONTENT_ACTION, $tmp);
         $tmp = null;
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('_processGetModelAction');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
     }
 
 
@@ -440,16 +422,18 @@ class Application extends Controller
     private function getTemplateFromView($fileName)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('getTemplateFromView');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
         $fileContent = file_get_contents($fileName);
-        if(!preg_match_all('{([<]{1}template([^<]*)[>]{1})(.*)([/<]{2}template[>]{1})}imsU', $fileContent, $templates))
+        if (!preg_match_all('{([<]{1}template([^<]*)[>]{1})(.*)([/<]{2}template[>]{1})}imsU', $fileContent, $templates))
             $templates = [];
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('getTemplateFromView');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
 
         return $templates;
     }
@@ -463,41 +447,45 @@ class Application extends Controller
      * @return   void
      * @access   private
      */
-    private function parseTemplateFromView($templates = [], &$view = FALSE)
+    private function parseTemplateFromView($templates = [], &$view = false)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('parseTemplateFromView');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
 
-        if(sizeof($templates) === 0)
+        if (sizeof($templates) === 0) {
             trigger_error("Class name: ".__CLASS__.'  function: '.__FUNCTION__.'  \$templates must be array!');
-        if(!$view)
+        }
+        if (!$view) {
             trigger_error("Class name: ".__CLASS__.'  function: '.__FUNCTION__.'  \$view is required!');
+        }
 
-        foreach($templates as $key1=>$t){
-            if($key1 === 1){
+        foreach($templates as $key1=>$t) {
+            if ($key1 === 1) {
                 // get tag of template
-                foreach($t as $key2=>$r){
+                foreach($t as $key2=>$r) {
                     $view->templates[$key2]['templateTag'] = $r;
                 }
             }
-            elseif($key1 === 2){
+            elseif ($key1 === 2) {
                 // get params of template from file in View
-                foreach($t as $key2=>$r){
+                foreach($t as $key2=>$r) {
                     preg_match_all('/([[:alnum:]_]+)=[\'|"]?([[:alnum:]_]+)[\'|"]?/i', $r, $vars);
-                    for($i = 0; $i < sizeof($vars[0]); $i++){
+                    for($i = 0; $i < sizeof($vars[0]); $i++) {
                         // param 'name' is a file name of template
-                        if($vars[1][$i] === 'name')
+                        if ($vars[1][$i] === 'name') {
                             $view->templates[$key2]['templateFileName'] = './'.ucfirst($this->getArea()).'/View/_template/'.$vars[2][$i].'.php';
+                        }
 
                         $view->templates[$key2]['args'][$vars[1][$i]] = $vars[2][$i];
                     }
                 }
             }
-            elseif($key1 === 3){
+            elseif ($key1 === 3) {
                 // if template has content - set 'true', else - set 'false';
-                foreach($t as $key2=>$r){
-                    if(trim($r) === ''){
+                foreach($t as $key2=>$r) {
+                    if (trim($r) === '') {
                         $view->templates[$key2]['templateTag'] = $templates[0][$key2];
                         $view->templates[$key2]['hasContent'] = false;
                     }
@@ -508,8 +496,9 @@ class Application extends Controller
         }
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('parseTemplateFromView');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
 
         return 0;
     }
@@ -525,14 +514,15 @@ class Application extends Controller
     private function getTemplateContent(&$view)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('getTemplateContent');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
-        foreach($view->templates as &$t){
+        foreach($view->templates as &$t) {
             $path = Helper::_cfg('path_src').$t['templateFileName'];
             $t['contentText'] = $this->_getFileContent($path, $t['args']);
 
-            if($t['hasContent'] === true){
+            if ($t['hasContent'] === true) {
                 $content = explode('<content></content>', $t['contentText']);
                 $t['contentHeader'] = $content[0];
                 $t['contentFooter'] = $content[1];
@@ -541,8 +531,9 @@ class Application extends Controller
         }
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('getTemplateContent');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
     }
 
 
@@ -556,11 +547,12 @@ class Application extends Controller
     private function replaceTemplateTags(&$view)
     {
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::mark('replaceTemplateTags');
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__);
+        }
 
-        foreach($view->templates as &$t){
-            if($t['hasContent'] === false){
+        foreach($view->templates as &$t) {
+            if ($t['hasContent'] === false) {
                 $view->content = str_replace($t['templateTag'], $t['contentText'], $view->content);
             }
             else{
@@ -572,8 +564,9 @@ class Application extends Controller
         unset($view->templates);
 
         // timer mark
-        if(Helper::_cfg('debug'))
-            Timer::time('replaceTemplateTags');
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__);
+        }
     }
 
 
@@ -591,8 +584,9 @@ class Application extends Controller
         $currentUrl = $url->getUrl(TRUE);
         $vars['currentUrl'] = $currentUrl;
 
-        if(!file_exists($file))
+        if (!file_exists($file)) {
             trigger_error("Class name:".__CLASS__.'  function: '.__FUNCTION__.'  File '.$file.' not exist.');
+        }
 
         extract($vars, EXTR_OVERWRITE);
         ob_start();
@@ -610,10 +604,12 @@ class Application extends Controller
      * @return  void
      * @access  private
      */
-    private function _setHeaderCharset($charset = FALSE)
+    private function _setHeaderCharset($charset = false)
     {
-        if(!$charset)
+        if (!$charset) {
             $charset = Helper::_cfg('page_charset');
+        }
+
         header("Content-Type: text/html; charset=".$charset);
     }
 
@@ -626,13 +622,13 @@ class Application extends Controller
      */
     private function _getFullText()
     {
-        $file = Helper::_cfg('path_src').$this->container->get('_layout');
+        $file = Helper::_cfg('path_src').$this->getContainerVar('_layout');
         $array = [
-            'layoutContent' => $this->container->get('_layoutContent'),
+            'layoutContent' => $this->getContainerVar(Controller::CONTAINER_VAR_LAYOUT_CONTENT),
         ];
 
         // if debug On - show debug div
-        if(Helper::_cfg('debug')){
+        if (Helper::_cfg('debug')) {
             $debugTemplateFile = Helper::_cfg('path_src').'/Common/View/_template/debug.php';
 
             // timer mark
@@ -653,7 +649,7 @@ class Application extends Controller
         // parse view tpl
         // if view has templates - get their content
         $templates = $this->getTemplateFromView($file);
-        if(sizeof($templates) > 0){
+        if (sizeof($templates) > 0) {
             $view = new View();
             $this->parseTemplateFromView($templates, $view);
             $this->getTemplateContent($view);
@@ -663,67 +659,57 @@ class Application extends Controller
             }
         }
 
-        $this->container->set('fullText', $layoutFullText);
+        $this->setContainerVar('fullText', $layoutFullText);
+    }
+
+
+    /**
+     * Function make call to action
+     * 
+     * @param  string $controller [description]
+     * @param  string $action     [description]
+     * @param  array  $params     [description]
+     * @return View
+     * @access private
+     */
+    private function callContoller($controller = '', $action = '', $params = [])
+    {
+        // timer mark
+        if (Helper::_cfg('debug')) {
+            Timer::mark(__FUNCTION__.' ['.$controller.'::'.$action.']');
+        }
+
+        // call controller
+        $obj = new $controller();
+
+        if (!method_exists($obj, $action)) {
+            trigger_error('Call to undefined method '.$controller.'::'.$action.'()');
+        }
+
+        // set container in controller
+        $obj->setContainer($this->getContainer());
+
+        // call method
+        $view = call_user_func_array([$obj, $action], $params);
+
+        // timer mark
+        if (Helper::_cfg('debug')) {
+            Timer::time(__FUNCTION__.' ['.$controller.'::'.$action.']');
+        }
+
+        return $view;
     }
 
 
     /**
      * Function display all content (layout+views)
      *
-     * @return   string
-     * @access   private
+     * @return   void
+     * @access   public
      */
     public function display()
     {
-        echo $this->container->get('fullText');
+        echo $this->getContainerVar('fullText');
         return;
-    }
-
-
-    /**
-     * [setArea description]
-     * @param string $area [description]
-     */
-    public function setArea($area = 'public')
-    {
-        $this->container->set('_area', $area);
-    }
-
-
-    /**
-     * [getArea description]
-     * @return    string
-     * @access    public
-     */
-    public function getArea()
-    {
-        return $this->container->get('_area');
-    }
-
-
-    /**
-     * Function set value in container
-     *
-     * @param   string  $key
-     * @param   mixed   $value
-     * @return  void
-     * @access  public
-     */
-    public function setContainerVar($key = '', $value = null)
-    {
-        $this->container->set($key, $value);
-    }
-
-
-    /**
-     * Function get value ftom container by $key
-     *
-     * @param   string  $key
-     * @return  mixed
-     * @access  public
-     */
-    public function getContainerVar($key = '')
-    {
-        return $this->container->get($key);
     }
 }

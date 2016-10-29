@@ -32,10 +32,12 @@ class Helper
      */
     public static function _substr($str = '', $start = 0, $length = 0, $encoding = 'utf-8')
     {
-        if (function_exists('mb_substr'))
+        if (function_exists('mb_substr')) {
             return mb_substr($str, $start, $length, $encoding);
-        else
+        }
+        else {
             return substr($str, $start, $length);
+        }
     }
 
 
@@ -77,10 +79,12 @@ class Helper
      */
     public static function _encoding($str, $fromEncoding, $toEncoding = 'UTF-8')
     {
-        if (function_exists('mb_convert_encoding'))
+        if (function_exists('mb_convert_encoding')) {
             $str = mb_convert_encoding($str, $toEncoding, $fromEncoding);
-        elseif (function_exists('iconv'))
+        }
+        elseif (function_exists('iconv')) {
             $str = iconv($fromEncoding, $toEncoding, $str);
+        }
 
         return $str;
     }
@@ -94,21 +98,26 @@ class Helper
      * @param     boolean     $addCorrect
      * @return    void
      */
-    public static function _date($format = 'Y-m-d H:i:s', $time = false, $addCorrect = false)
+    public static function _date($format = 'Y-m-d H:i:s', $time = false, $addCorrect = false, $default = '--//--//--')
     {
-        if (!$time)
-            $time = time();
-        elseif (!is_numeric($time))
+        if (is_null($time)) {
+            return $default;
+        }
+
+        if (!is_numeric($time)) {
             $time = strtotime($time);
+        }
+        elseif (empty($time)) {
+            $time = time();
+        }
 
-        if (($format === false) || (trim($format) === ''))
-            $format = 'Y-m-d H:i:s';
-
-        if ($addCorrect)
+        // need for fix time changes
+        if ($addCorrect){
             $time += self::_cfg('date_correct');
+        }
 
-        $date = date($format, $time);
-        return $date;
+        // return date string
+        return date($format, $time);
     }
 
 
@@ -123,8 +132,9 @@ class Helper
     public static function _errorHandler($errno = 0, $errstr = '', $errfile = '', $errline = 0)
     {
         // need for @
-        if (error_reporting() === 0)
+        if (error_reporting() === 0) {
             return false;
+        }
 
         // if console error
         if (php_sapi_name() === 'cli') {
@@ -177,8 +187,9 @@ class Helper
         $area = 'admin';
         $h = $history[sizeof($history)-1];
         if (!empty($h['object']) && ($h['object'] instanceof \Katran\Application)) {
-            if ($h['object']->getArea())
+            if ($h['object']->getArea()) {
                 $area = $h['object']->getArea();
+            }
         }
 
         // echo error info with history
@@ -207,8 +218,9 @@ class Helper
         $error .= print_r($var, true);
         $error .= '</pre><hr/>';
         echo $error; 
-        if ($die)
+        if ($die) {
             die();
+        }
     }
 
 
@@ -265,13 +277,16 @@ class Helper
      */
     public static function _msg($var, $lang = false)
     {
-        if ($lang === false)
+        if ($lang === false) {
             $lang = self::_cfg('lang');
+        }
 
-        if (isset(self::$storage['_msg'][$var][$lang]))
+        if (isset(self::$storage['_msg'][$var][$lang])) {
             return self::$storage['_msg'][$var][$lang];
-        else
+        }
+        else {
             return '';
+        }
     }
 
 
@@ -286,21 +301,25 @@ class Helper
      */
     public static function _debugStore($name, $var = false, $addInArray = false)
     {
-        if (!isset($debugStore))
+        if (!isset($debugStore)) {
             static $debugStore = [];
-
-        if ($var !== false) {
-            if ($addInArray)
-                $debugStore[$name][] = $var;
-            else
-                $debugStore[$name] = $var;
-            return 0;
         }
 
-        elseif (isset($debugStore[$name]))
+        if ($var !== false) {
+            if ($addInArray) {
+                $debugStore[$name][] = $var;
+            }
+            else {
+                $debugStore[$name] = $var;
+            }
+            return 0;
+        }
+        elseif (isset($debugStore[$name])) {
             return $debugStore[$name];
-        else
+        }
+        else {
             return [];
+        }
     }
 
 
@@ -313,15 +332,17 @@ class Helper
      */
     public static function _log($string = '', $file = false)
     {
-        if (trim($string) === '')
+        if (trim($string) === '') {
             return false;
+        }
 
         // path to file
         $path = empty($file)?self::_cfg('log'):$file;
 
         // create dir if need 
-        if (!file_exists(dirname($path)))
+        if (!file_exists(dirname($path))) {
             self::_mkdir(dirname($path));
+        }
 
         // add records to the log
         $log = new Logger('default');
@@ -341,8 +362,9 @@ class Helper
      */
     public static function _menu($menu = '', $return = false, $returnTitle = false)
     {
-        if (!isset($store))
+        if (!isset($store)) {
             static $store = null;
+        }
 
         if ($return) {
             $res = true;
@@ -356,8 +378,9 @@ class Helper
             }
 
             // need for show title in admin layout
-            if ($returnTitle)
+            if ($returnTitle) {
                 return ($res === true)?'':$res;
+            }
 
             return (($tmp === $menu) || strstr($tmp, $menu.'-') !== false);
         }
@@ -441,8 +464,9 @@ class Helper
     public static function _jsEscape($str = '')
     {
         $str = trim($str);
-        if (!is_numeric($str))
+        if (!is_numeric($str)) {
             $str = str_replace(['"'], ['&quot;'], $str);
+        }
 
 
         return $str;

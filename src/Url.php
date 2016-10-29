@@ -106,14 +106,10 @@ class Url
             if (isset($this->args['item'])){
                 $this->path .= '/'.$this->args['item'];
                 unset($this->args['item']);
-
-                if (isset($this->args['action'])){
-                    unset($this->args['action']);
-                }
             }
 
-            if (isset($this->args['act'])) {
-                unset($this->args['act']);
+            if (isset($this->args['action'])) {
+                unset($this->args['action']);
             }
         }
         elseif (isset($this->args['alias'])){
@@ -139,9 +135,9 @@ class Url
     /**
      * Function set one param to url
      *
-     * @param    string      $var
-     * @param    int|string  $value
-     * @return   void
+     * @param   string  $var
+     * @param   mixed   $value
+     * @return  void
      * @access  public
      */
     public function setParam($var, $value = 0)
@@ -153,17 +149,18 @@ class Url
     /**
      * Function get param from url
      *
-     * @param    string  $var
-     * @return   string
+     * @param   string  $var
+     * @param   mixed   $default
+     * @return  string
      * @access  public
      */
-    public function getParam($var)
+    public function getParam($var, $default = null)
     {
         if (isset($this->args[$var])) {
             return strval(trim($this->args[$var]));
         }
         else {
-            return '';
+            return $default;
         }
     }
 
@@ -171,17 +168,18 @@ class Url
     /**
      * Function get param from url
      *
-     * @param    string   $var
-     * @return   integer
+     * @param   string  $var
+     * @param   mixed   $default
+     * @return  integer
      * @access  public
      */
-    public function getInt($var)
+    public function getInt($var, $default = 0)
     {
         if (isset($this->args[$var])) {
             return intval($this->args[$var]);
         }
         else {
-            return 0;
+            return $default;
         }
     }
 
@@ -189,7 +187,7 @@ class Url
     /**
      * Function clear all params
      *
-     * @return   void
+     * @return  void
      * @access  public
      */
     public function clearParams()
@@ -201,8 +199,8 @@ class Url
     /**
      * Function delete one param
      *
-     * @param    string   $var
-     * @return   void
+     * @param   string   $var
+     * @return  void
      * @access  public
      */
     public function deleteParam($var)

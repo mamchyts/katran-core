@@ -5,6 +5,8 @@
 namespace Katran\Database;
 
 use Katran\Helper;
+use Katran\Library\Pager;
+use Katran\Library\Sorter;
 
 /**
  * This class has methid for work with MySQL.
@@ -48,8 +50,9 @@ class DbImproved extends Db
                 $sql[] = '`'.$key.'` = ?';
 
                 // fix for save array value
-                if (!is_scalar($d))
+                if (!is_scalar($d)) {
                     $d = json_encode($d);
+                }
 
                 $bindParams[] = $d;
             }
@@ -93,8 +96,9 @@ class DbImproved extends Db
         $fieldStr = implode('`, `', $fields);
         $valStr = implode(', ', $sql);
 
-        if (empty($table))
+        if (empty($table)) {
             $table = $this->getTable();
+        }
 
         $sql = 'INSERT INTO `'.$table.'` (`'.$fieldStr.'`) VALUES ('.$valStr.')';
         return $this->query($sql, $bindParams, 'insert');
@@ -136,7 +140,7 @@ class DbImproved extends Db
      * @return  string
      * @access  protected
      */
-    protected function _parseWhere($where = [], $map = [])
+    protected function _parseWhere($where = [])
     {
         $res = [
             'sql' => [],
@@ -192,8 +196,9 @@ class DbImproved extends Db
         $where = $this->_parseWhere($where);
 
         // parse sorter
-        if (is_string($sorter) && ($sorter !== ''))
+        if (is_string($sorter) && ($sorter !== '')) {
             $order = ' ORDER BY '.$sorter;
+        }
         elseif (is_array($sorter) && sizeof($sorter)) {
             $keys = array_keys($sorter);
             $sorterValues = array_values($sorter);
@@ -201,8 +206,9 @@ class DbImproved extends Db
         }
 
         //parse pager
-        if (is_integer($pager))
+        if (is_integer($pager)) {
             $limit = ' LIMIT 0, '.$pager;
+        }
         elseif (is_array($pager) && (count($pager) > 0)) {
             $limit = ' LIMIT '.((isset($pager[1]))?$pager[0]:0).', '.((isset($pager[1]))?$pager[1]:$pager[0]);
         }
@@ -250,30 +256,26 @@ class DbImproved extends Db
         // Get count of possibly rows if count = 0  - return []
         $sql = 'SELECT COUNT(id) FROM `'.$this->getTable().'` WHERE '.$where['sql'];
         $count = $this->getField($sql, $where['value']);
-        if (intval($count) === 0)
+        if (intval($count) === 0) {
             return [];
+        }
 
-        // parse sorter
-        if (is_string($sorter) && ($sorter !== ''))
+        // parse sorter variable
+        if (is_string($sorter) && !empty($sorter)) {
             $order = ' ORDER BY '.$sorter;
-        elseif (is_object($sorter)) {
-            // Work with class Sorter.
+        }
+        elseif ($sorter instanceof Sorter) {
             $order = ' ORDER BY '.$sorter->getOrder($this->fields);
         }
 
         //parse pager
-        if (is_integer($pager))
+        if (is_integer($pager) || is_string($pager)) {
             $limit = ' LIMIT '.$pager;
-        elseif (is_array($pager) && (count($pager) > 0)) {
-            if (isset($pager['from']))
-                $from = intval($pager['from']);
-            else
-                $from = 0;
-
-            $limit = ' LIMIT '.$from.', '.intval($pager['to']-$from);
         }
-        elseif (is_object($pager)) {
-            // Work with class Pager.
+        elseif (is_array($pager) && (sizeof($pager) === 2)) {
+            $limit = ' LIMIT '.intval($pager[0]).', '.intval($pager[0]);
+        }
+        elseif ($pager instanceof Pager) {
             $pager->init($count);
             $limit = ' LIMIT '.$pager->getLimit();
         }
@@ -355,8 +357,9 @@ class DbImproved extends Db
     public function getHash($sql = FALSE, $id = 'id', $title = 'title')
     {
         // create and send sql request
-        if ($sql === FALSE)
+        if ($sql === FALSE) {
             $sql = 'SELECT `'.$id.'`, `'.$title.'` FROM `'.$this->getTable().'` ORDER BY `'.$title.'` ASC';
+        }
 
         $hash = [];
         foreach ($this->getRows($sql) as $r) {
