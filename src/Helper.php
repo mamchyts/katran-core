@@ -50,7 +50,7 @@ class Helper
     public static function _mkdir($dir = '', $mode = 0644)
     {
         mkdir($dir, $mode, true);
-        self::_chmod($dir, $mode);
+        static::_chmod($dir, $mode);
     }
 
 
@@ -113,7 +113,7 @@ class Helper
 
         // need for fix time changes
         if ($addCorrect){
-            $time += self::_cfg('date_correct');
+            $time += static::_cfg('date_correct');
         }
 
         // return date string
@@ -144,18 +144,18 @@ class Helper
                     'Line: '.$errline."\n";
 
             //save error text into log file
-            self::_log($str, self::_cfg('error_log'));
+            static::_log($str, static::_cfg('error_log'));
             echo $str;
             exit(0);
         }
 
         //save error text into log file
-        self::_log('Error code: '.$errno."\n".
+        static::_log('Error code: '.$errno."\n".
                 'Message: '.$errstr."\n".
                 'File: '.$errfile."\n".
                 'Line: '.$errline."\n".
                 'Url: '.($_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'])
-             , self::_cfg('error_log'));
+             , static::_cfg('error_log'));
 
         $history = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 
@@ -179,9 +179,9 @@ class Helper
         $strHistory .= '<tr><td colspan=4>SERVER: <pre>'.print_r($_SERVER,1).'</pre></td></tr>';
         $strHistory .= '</table>';
 
-        if (self::_cfg('send_bug_to_email') && (strpos(self::_cfg('send_bug_to_email'), '@') !== false)) {
+        if (static::_cfg('send_bug_to_email') && (strpos(static::_cfg('send_bug_to_email'), '@') !== false)) {
             $mailer = new Mailer();
-            $mailer->send(self::_cfg('send_bug_to_email'), '_error()', $strHistory);
+            $mailer->send(static::_cfg('send_bug_to_email'), '_error()', $strHistory);
         }
 
         $area = 'admin';
@@ -230,9 +230,9 @@ class Helper
      */
     public static function _setCfg($files = [])
     {
-        self::$storage['_cfg'] = [];
+        static::$storage['_cfg'] = [];
         foreach ($files as $f) {
-            self::$storage['_cfg'] = array_merge(self::$storage['_cfg'], require_once $f);
+            static::$storage['_cfg'] = array_merge(static::$storage['_cfg'], require_once $f);
         }
     }
 
@@ -244,7 +244,7 @@ class Helper
      */
     public static function _cfg()
     {
-        $tmp = self::$storage['_cfg'];
+        $tmp = static::$storage['_cfg'];
         foreach (func_get_args() as $key) {
             if (isset($tmp[$key])) {
                 $tmp = $tmp[$key];
@@ -261,9 +261,9 @@ class Helper
      */
     public static function _setMsg($files = [])
     {
-        self::$storage['_msg'] = [];
+        static::$storage['_msg'] = [];
         foreach ($files as $f) {
-            self::$storage['_msg'] = array_merge(self::$storage['_msg'], require_once $f);
+            static::$storage['_msg'] = array_merge(static::$storage['_msg'], require_once $f);
         }
     }
 
@@ -278,11 +278,11 @@ class Helper
     public static function _msg($var, $lang = false)
     {
         if ($lang === false) {
-            $lang = self::_cfg('lang');
+            $lang = static::_cfg('lang');
         }
 
-        if (isset(self::$storage['_msg'][$var][$lang])) {
-            return self::$storage['_msg'][$var][$lang];
+        if (isset(static::$storage['_msg'][$var][$lang])) {
+            return static::$storage['_msg'][$var][$lang];
         }
         else {
             return '';
@@ -337,11 +337,11 @@ class Helper
         }
 
         // path to file
-        $path = empty($file)?self::_cfg('log'):$file;
+        $path = empty($file)?static::_cfg('log'):$file;
 
         // create dir if need 
         if (!file_exists(dirname($path))) {
-            self::_mkdir(dirname($path));
+            static::_mkdir(dirname($path), Helper::_cfg('filemode', 'folder'));
         }
 
         // add records to the log
