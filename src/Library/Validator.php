@@ -160,7 +160,7 @@ class Validator
      */
     public function hasErrors()
     {
-        return sizeof ($this->errors);
+        return sizeof($this->errors);
     }
 
 
@@ -174,7 +174,7 @@ class Validator
     public function run()
     {
         // If no validation rules
-        if (count($this->rules) === 0) {
+        if (sizeof($this->rules) === 0) {
             return false;
         }
 
@@ -182,11 +182,12 @@ class Validator
         foreach ($this->rules as $r) {
             // Check, if we have field for this rule...
             if (preg_match('/([[:word:].]+)\[([[:word:].]+)\]/i', $r['field'], $field)) {
+
                 // if we have field for rule - check rule, else - set error text
             	if (isset($this->fields[$field[1]][$field[2]])) {
                     $this->check($this->fields[$field[1]][$field[2]], $r);
                 }
-                else{
+                else {
                     foreach ($r['rule'] as $rule) {
                         if ($rule === 'required') {
                             $this->setError($r['label'], 'required', $r['field']);
@@ -195,12 +196,13 @@ class Validator
                     }
                 }
             }
-            else{
+            else {
+
                 // if we have field for rule - check rule, else - set error text
             	if (isset($this->fields[$r['field']])) {
                     $this->check($this->fields[$r['field']], $r);
                 }
-                else{
+                else {
                     foreach ($r['rule'] as $rule) {
                         if ($rule === 'required') {
                             $this->setError($r['label'], 'required', $r['field']);
@@ -212,7 +214,7 @@ class Validator
         }
 
         // if has errors - return false
-        return !(count($this->errors));
+        return !(sizeof($this->errors));
     }
 
 
@@ -236,7 +238,7 @@ class Validator
                 $functionName = $r[0];
                 $result = $this->$functionName($data, $r[1]);
             }
-            else{
+            else {
                 if (!method_exists($this, $r)) {
                     continue;
                 }
@@ -353,7 +355,7 @@ class Validator
                     }
                 }
             }
-            else{
+            else {
                 if ($key === $field) {
                     if ($str == $f) {
                         return true;
@@ -376,10 +378,10 @@ class Validator
     private function min_length($str, $val)
     {
         if (function_exists('mb_strlen')) {
-            return (mb_strlen($str, Helper::_cfg('page_charset')) < $val) ? false : true;
+            return (mb_strlen($str, Helper::_cfg('page_charset')) > $val);
         }
 
-        return (strlen($str) < $val) ? false : true;
+        return (strlen($str) > $val);
     }
 
 
@@ -394,10 +396,10 @@ class Validator
     private function max_length($str, $val)
     {
         if (function_exists('mb_strlen')) {
-            return (mb_strlen($str, Helper::_cfg('page_charset')) > $val) ? false : true;
+            return (mb_strlen($str, Helper::_cfg('page_charset')) < $val);
         }
 
-        return (strlen($str) > $val) ? false : true;
+        return (strlen($str) < $val);
     }
 
 
@@ -412,10 +414,10 @@ class Validator
     function exact_length($str, $val)
     {
         if (function_exists('mb_strlen')) {
-            return (mb_strlen($str, Helper::_cfg('page_charset')) != $val) ? false : true;
+            return (mb_strlen($str, Helper::_cfg('page_charset')) == $val);
         }
 
-        return (strlen($str) != $val) ? false : true;
+        return (strlen($str) == $val);
     }
 
 
@@ -428,7 +430,8 @@ class Validator
      */
     private function email($str)
     {
-        return (!preg_match("/^([a-z0-9\+_\-]+)(\.[a-z0-9\+_\-]+)*@([a-z0-9\-]+\.)+[a-z]{2,6}$/ix", $str)) ? false : true;
+        // `@` and `.` must be present and non in start
+        return strpos($str, '@') && strpos($str, '.');
     }
 
 
@@ -466,7 +469,7 @@ class Validator
         $ip_segments = explode('.', $ip);
 
         // Always 4 segments needed
-        if (count($ip_segments) != 4) {
+        if (sizeof($ip_segments) != 4) {
             return false;
         }
 
@@ -496,7 +499,7 @@ class Validator
      */
     private function alpha($str)
     {
-        return ( ! preg_match("/^([a-z])+$/i", $str)) ? false : true;
+        return preg_match("/^([a-z])+$/i", $str);
     }
 
 
@@ -509,7 +512,7 @@ class Validator
      */
     private function alpha_numeric($str)
     {
-        return ( ! preg_match("/^([a-z0-9])+$/i", $str)) ? false : true;
+        return preg_match("/^([a-z0-9])+$/i", $str);
     }
 
 
@@ -522,7 +525,7 @@ class Validator
      */
     private function alpha_dash($str)
     {
-        return ( ! preg_match("/^([-a-z0-9_-])+$/i", $str)) ? false : true;
+        return preg_match("/^([-a-z0-9_-])+$/i", $str);
     }
 
 
@@ -535,7 +538,7 @@ class Validator
      */
     private function numeric($str)
     {
-        return (bool)preg_match( '/^[\-+]?[0-9]*\.?[0-9]+$/', $str);
+        return preg_match( '/^[\-+]?[0-9]*\.?[0-9]+$/', $str);
     }
 
 
@@ -548,7 +551,7 @@ class Validator
      */
     private function is_numeric($str)
     {
-        return ( ! is_numeric($str)) ? false : true;
+        return is_numeric($str);
     }
 
 
@@ -623,7 +626,7 @@ class Validator
      */
     private function is_natural($str)
     {
-        return (bool) preg_match( '/^[0-9]+$/', $str);
+        return preg_match( '/^[0-9]+$/', $str);
     }
 
 
@@ -660,7 +663,7 @@ class Validator
      */
     private function valid_base64($str)
     {
-        return (bool) ! preg_match('/[^a-zA-Z0-9\/\+=]/', $str);
+        return  ! preg_match('/[^a-zA-Z0-9\/\+=]/', $str);
     }
 
 

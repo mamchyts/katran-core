@@ -24,16 +24,8 @@ class Account extends DbImproved
     const STATUS_ACTIVE  = 'active';
     const STATUS_BLOCKED = 'blocked';
 
-    /**
-     * Constructor set table
-     *
-     * @return  void
-     * @access  public
-     */
-    public function __construct()
-    {
-        parent::setTable('accounts');
-    }
+    // DB table name
+    const DB_TABLE = 'accounts';
 
 
     /**
@@ -45,9 +37,9 @@ class Account extends DbImproved
         static $cache = null;
         if ($cache === null) {
             $cache = [
-                self::AREA_ADMIN => 'Админ',
-                self::AREA_MEMBER => 'Клиент',
-                self::AREA_VISITOR => 'Гость',
+                static::AREA_ADMIN => 'Админ',
+                static::AREA_MEMBER => 'Клиент',
+                static::AREA_VISITOR => 'Гость',
             ];
         }
 
@@ -62,7 +54,7 @@ class Account extends DbImproved
      */
     public static function getArea($key = '')
     {
-        return self::getAreaHash()[$key];
+        return static::getAreaHash()[$key];
     }
 
 
@@ -75,8 +67,8 @@ class Account extends DbImproved
         static $cache = null;
         if ($cache === null) {
             $cache = [
-                self::STATUS_ACTIVE  => 'Активный',
-                self::STATUS_BLOCKED => 'Заблокирован',
+                static::STATUS_ACTIVE  => 'Активный',
+                static::STATUS_BLOCKED => 'Заблокирован',
             ];
         }
 
@@ -91,6 +83,6 @@ class Account extends DbImproved
      */
     public static function getStatus($key = '')
     {
-        return self::getStatusHash()[$key];
+        return static::getStatusHash()[$key];
     }
 }

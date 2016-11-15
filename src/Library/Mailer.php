@@ -37,13 +37,13 @@ class Mailer
     {
         // smtp OR mail (sendmail)
         $conf = Helper::_cfg('mail', 'smtp');
-        if(!empty($conf['host'])){
+        if (!empty($conf['host'])) {
             $transport = \Swift_SmtpTransport::newInstance($conf['host'], $conf['port'], $conf['secure'])
                 ->setTimeout($conf['timeout'])
                 ->setUsername($conf['user'])
                 ->setPassword($conf['pass']);
         }
-        else{
+        else {
             $transport = \Swift_MailTransport::newInstance();
             $transport->setExtraParams('');
         }
@@ -52,8 +52,9 @@ class Mailer
         $this->mailer = \Swift_Mailer::newInstance($transport);
 
         // create dir if need 
-        if(!file_exists(dirname(Helper::_cfg('mail_log'))))
-            Helper::_mkdir(dirname(Helper::_cfg('mail_log')));
+        if (!file_exists(dirname(Helper::_cfg('mail_log')))) {
+            Helper::_mkdir(dirname(Helper::_cfg('mail_log')), Helper::_cfg('filemode', 'folder'));
+        }
 
         // create a log channel
         $this->log = new Logger('mail');
@@ -74,8 +75,9 @@ class Mailer
     public function send($to = [], $subject = '', $body = '', $attachment = [])
     {
         // $to must be array
-        if(!is_array($to))
+        if (!is_array($to)) {
             $to = array($to);
+        }
 
         // create instance
         $message = \Swift_Message::newInstance();
@@ -93,7 +95,7 @@ class Mailer
         $error = FALSE;
         try {
             // attachment files
-            foreach ($attachment as $path => $fileName){
+            foreach ($attachment as $path => $fileName) {
                 $attach = \Swift_Attachment::fromPath($path)->setFilename($fileName);
                 $message->attach($attach);
             }
@@ -102,10 +104,10 @@ class Mailer
             $message->setTo($to);
 
             // try send 
-            if($res = $this->mailer->send($message)){
+            if ($res = $this->mailer->send($message)) {
                 $status = 'ok';
             }
-            else{
+            else {
                 $status = 'error';
                 $error = 'Internal system error';
             }
@@ -136,8 +138,9 @@ class Mailer
         // add records to the log
         $this->log->addInfo('Try send email. Result - '.$status."\n", [$subject, $to]);
 
-        if($error)
+        if ($error) {
             $this->log->addError('Error: '.$error."\n");
+        }
     }
 }
 
