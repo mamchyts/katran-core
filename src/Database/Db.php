@@ -17,12 +17,8 @@ use Katran\Helper;
  */
 class Db
 {
-
-    /**
-     * Table name
-     * @var string
-     */
-    private $table = '';
+    // list of query types
+    const DB_QUERY_TYPE_INSERT = 'insert';
 
     /**
      * PDO connection object
@@ -47,12 +43,6 @@ class Db
      * @var string
      */
     private static $pdoArray = [];
-
-    /**
-     * Tables array
-     * @var string
-     */
-    public static $tables = [];
 
     /**
      * Names of columns
@@ -83,23 +73,23 @@ class Db
     /**
      * Function return object for work with table $dbModel
      *
-     * @param   mixed      $dbModel
+     * @param   DbImproved $dbModel
      * @param   array|hash $config
      * @return  object
      * @access  public
      */
-    public static function getModel($dbModel = '', $config = [])
+    public static function getModel(DbImproved $dbModel, $config = [])
     {
-        if(empty($config)) {
+        if (empty($config)) {
             $config = Helper::_cfg('db');
         }
 
         $pdoHash = $config['host'].'::'.$config['name'].'::'.$config['port'].'::'.$config['user'];
 
-        if(isset(self::$pdoArray[$pdoHash])){
+        if (isset(self::$pdoArray[$pdoHash])){
             $pdo = self::$pdoArray[$pdoHash];
         }
-        else{
+        else {
             // call constructor
             $db = new Db($config);
 
@@ -108,29 +98,21 @@ class Db
 
             $pdo = $db->pdo;
             self::$pdoArray[$pdoHash] = $pdo;
-            self::$tables[$pdoHash] = $db->getFields('SHOW TABLES;');
         }
 
-        // if get already DbImproved child
-        if($dbModel instanceof DbImproved){
-            $obj = $dbModel;
-        }
-        // if we already have such table
-        elseif(in_array($dbModel, self::$tables[$pdoHash])){
-            $obj = new DbImproved($dbModel);
-        }
-        else{
+        // if incorrect $dbModel
+        if (!($dbModel instanceof DbImproved)){
             trigger_error(sprintf(Helper::_msg('mysql'), 'Not real table name'));
         }
 
-        $obj->pdo = $pdo;
-        $obj->fullFields = $obj->getRows('SHOW FIELDS FROM `'.$obj->getTable().'`');
+        $dbModel->pdo = $pdo;
+        $dbModel->fullFields = $dbModel->getRows('SHOW FIELDS FROM `'.$dbModel::DB_TABLE.'`');
 
-        foreach($obj->fullFields as $f) {
-            $obj->fields[] = $f['Field'];
+        foreach($dbModel->fullFields as $f) {
+            $dbModel->fields[] = $f['Field'];
         }
 
-        return $obj;
+        return $dbModel;
     }
 
 
@@ -145,7 +127,7 @@ class Db
      */
     protected function query($sql = '', $whereValues = [], $type = '')
     {
-        if(trim($sql) === '') {
+        if (empty($sql)) {
             trigger_error(sprintf(Helper::_msg('mysql'), 'Empty request to SQL server'));
         }
 
@@ -156,12 +138,12 @@ class Db
         Timer::mark('sql_finish');
 
         // if error
-        if($this->result->errorCode() !== '00000') {
+        if ($this->result->errorCode() !== '00000') {
             trigger_error(sprintf(Helper::_msg('mysql'), implode('::', $this->result->errorInfo())));
         }
 
         // if debug On save request into debug store
-        if(Helper::_cfg('debug')){
+        if (Helper::_cfg('debug')){
             $data = [];
             $data['time']    = Timer::time('sql_start', 'sql_finish');
             $data['request'] = str_replace(['?'], $whereValues, $sql);
@@ -169,7 +151,7 @@ class Db
         }
 
         // insert() must return ID
-        if($type === 'insert') {
+        if ($type === self::DB_QUERY_TYPE_INSERT) {
             return $this->pdo->lastInsertId();
         }
     }
@@ -232,31 +214,6 @@ class Db
 
 
     /**
-     * Function return database table
-     *
-     * @return  string
-     * @access  public
-     */
-    public function getTable()
-    {
-        return $this->table;
-    }
-
-
-    /**
-     * Function set table parameter
-     *
-     * @param   string $table
-     * @return  string
-     * @access  protected
-     */
-    protected function setTable($table = '')
-    {
-        return $this->table = $table;
-    }
-
-
-    /**
      * Function return database connection
      *
      * @return  mixed
@@ -277,8 +234,9 @@ class Db
      */
     public function escape($var = '', $isTrim = true)
     {
-        if($isTrim)
+        if ($isTrim) {
             $var = trim($var);
+        }
 
         return $this->getConnection()->quote($var);
     }
