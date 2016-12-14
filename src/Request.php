@@ -83,4 +83,16 @@ class Request
         $tmp = $this->serverRequest->getParsedBody();
         return !empty($tmp[$key])?$tmp[$key]:$default;
     }
+
+
+    /**
+     * Function get all
+     *
+     * @return  array
+     * @access  public
+     */
+    public function getAll()
+    {
+        return $this->data;
+    }
 }

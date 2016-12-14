@@ -17,12 +17,23 @@ use Katran\Library\Sorter;
 class DbImproved extends Db
 {
     /**
+     * Must be public
+     * public need for create empty model (Db - private construct)
+     *
+     * @access  public
+     */
+    public function __construct()
+    {
+    }
+
+
+    /**
      * Function update one row in database
      *
-     * @param    array   $data
-     * @param    integer $id
-     * @param    string  $updateBy
-     * @return   boolen
+     * @param   array   $data
+     * @param   integer $id
+     * @param   string  $updateBy
+     * @return  boolen
      * @access  public
      */
     public function update($data = [], $id = 0, $updateBy = 'id')

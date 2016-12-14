@@ -43,7 +43,7 @@ class Validator
     public function setFields($request)
     {
         if ($request instanceof Request) {
-            $this->fields = $request->serverRequest->getParsedBody();
+            $this->fields = $request->getAll();
         }
         elseif ($request instanceof ServerRequest) {
             $this->fields = $request->getParsedBody();
@@ -79,11 +79,11 @@ class Validator
 
                 $this->setRules(trim($row[0]), trim($label), trim($row[2]));
             }
-            return 1;
+            return;
         }
 
         if (!is_string($field) || !is_string($rules) || $field == '') {
-            return $this;
+            return;
         }
 
         // If the field label wasn't passed we use the field name
@@ -107,8 +107,6 @@ class Validator
             'rule'	 => $rule,
             'errors' => [],
         );
-
-        return 1;
     }
 
 
@@ -123,10 +121,12 @@ class Validator
      */
     private function setError($label = '', $rule = '', $key = '')
     {
-        if (is_array($rule))
+        if (is_array($rule)) {
             $error = sprintf (Helper::_msg($rule[0]), $label, $rule[1]);
-        else
+        }
+        else {
             $error = sprintf (Helper::_msg($rule), $label);
+        }
 
         $this->errors[$key] = $error;
     }
@@ -174,7 +174,7 @@ class Validator
     public function run()
     {
         // If no validation rules
-        if (sizeof($this->rules) === 0) {
+        if (empty($this->rules)) {
             return false;
         }
 

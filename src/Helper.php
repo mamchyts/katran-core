@@ -98,7 +98,7 @@ class Helper
      * @param     boolean     $addCorrect
      * @return    void
      */
-    public static function _date($format = 'Y-m-d H:i:s', $time = false, $addCorrect = false, $default = '--//--//--')
+    public static function _date($format = 'Y-m-d H:i:s', $time = false, $addCorrect = true, $default = '--//--//--')
     {
         if (is_null($time)) {
             return $default;
