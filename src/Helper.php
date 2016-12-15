@@ -43,8 +43,8 @@ class Helper
 
     /**
      * [_mkdir description]
-     * @param  string  $dir  [description]
-     * @param  integer $mode [description]
+     * @param  string  $dir
+     * @param  integer $mode
      * @return void
      */
     public static function _mkdir($dir = '', $mode = 0644)
@@ -56,8 +56,8 @@ class Helper
 
     /**
      * [_chmod description]
-     * @param  string  $dirOrFile  [description]
-     * @param  integer $mode       [description]
+     * @param  string  $dirOrFile 
+     * @param  integer $mode
      * @return void
      */
     public static function _chmod($dirOrFile = '', $mode = 0644)
@@ -123,11 +123,11 @@ class Helper
 
     /**
      * [errorHandler description]
-     * @param  integer $errno   [description]
-     * @param  string  $errstr  [description]
-     * @param  string  $errfile [description]
-     * @param  integer $errline [description]
-     * @return [type]           [description]
+     * @param  integer $errno  
+     * @param  string  $errstr 
+     * @param  string  $errfile
+     * @param  integer $errline
+     * @return [type]    
      */
     public static function _errorHandler($errno = 0, $errstr = '', $errfile = '', $errline = 0)
     {
@@ -207,18 +207,18 @@ class Helper
 
     /**
      * Function display content of given variable
-     *
-     * @param     mixed
-     * @param     boolen
-     * @return    string
+     * 
+     * @param  mixed   $var   
+     * @param  boolean $continuePhp
+     * @return void
      */
-    public static function _d($var, $die = true)
+    public static function _d($var, $continuePhp = false)
     {
         $error  = '<hr/><pre>';
         $error .= print_r($var, true);
         $error .= '</pre><hr/>';
         echo $error; 
-        if ($die) {
+        if (!$continuePhp) {
             die();
         }
     }
@@ -226,7 +226,7 @@ class Helper
 
     /**
      * [setCfg description]
-     * @param array $files [description]
+     * @param array $files
      */
     public static function _setCfg($files = [])
     {
@@ -257,7 +257,7 @@ class Helper
 
     /**
      * [_setMsg description]
-     * @param array $files [description]
+     * @param array $files
      */
     public static function _setMsg($files = [])
     {
