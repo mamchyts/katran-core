@@ -169,7 +169,7 @@ class Application extends Controller
         $actMethod      = str_replace('_', '', $this->getContainerVar(Controller::CONTAINER_VAR_ACTION)).'Action';
 
         if (!file_exists($classFilePath)) {
-            trigger_error('File: <em>'.$classFilePath.'</em>. Not found.');
+            $this->forward('/404');
         }
 
         // call controller and return view
@@ -371,8 +371,9 @@ class Application extends Controller
                 $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
                 $actMethod      = str_replace(['-', '_'], '', $_controller[4]).'Action';
 
-                if (!file_exists($classFilePath))
-                    trigger_error('File: <em>'.$classFilePath.'</em>. Not found.');
+                if (!file_exists($classFilePath)) {
+                    $this->forward('/404');
+                }
 
                 // call controller and return view
                 $view = $this->callContoller($controller, $actMethod, [$this->getContainerVar('request')]);
