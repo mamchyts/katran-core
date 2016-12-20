@@ -106,16 +106,72 @@ class Filter
      * Return string for use in SQL query
      *
      * @param    string    $key
-     * @return   string
+     * @return   array
      * @access   private
      */
     private function getDateRange($key = '')
     {
-        if (isset($this->formData[$key.'_from']) && trim($this->formData[$key.'_from'])) {
-            $from = date('Y-m-d', strtotime($this->formData[$key.'_from']));
+        return $this->_getRange($key, false, false);
+    }
+
+
+    /**
+     * Function parse $this->formData and find field $key.
+     * Return string for use in SQL query
+     *
+     * @param    string    $key
+     * @return   array
+     * @access   private
+     */
+    private function getIntRange($key = '')
+    {
+        return $this->_getRange($key, true, false);
+    }
+
+
+    /**
+     * Function parse $this->formData and find field $key.
+     * Return string for use in SQL query
+     *
+     * @param    string    $key
+     * @return   array
+     * @access   private
+     */
+    private function getFloatRange($key = '')
+    {
+        return $this->_getRange($key, false, true);
+    }
+
+
+    /**
+     * Function parse $this->formData and find field $key.
+     * Return string for use in SQL query
+     * 
+     * @param  string  $key      [description]
+     * @param  boolean $intval   [description]
+     * @param  boolean $floatval [description]
+     * @return array
+     * @access private
+     */
+    private function _getRange($key = '', $intval = false, $floatval = false)
+    {
+        if (isset($this->formData[$key.'_from']) && (trim($this->formData[$key.'_from']) !== '')) {
+            $from = trim($this->formData[$key.'_from']);
+            if ($intval) {
+                $from = intval($from);
+            }
+            elseif ($floatval) {
+                $from = floatval($from);
+            }
         }
-        if (isset($this->formData[$key.'_to']) && trim($this->formData[$key.'_to'])) {
-            $to = date('Y-m-d', strtotime($this->formData[$key.'_to']));
+        if (isset($this->formData[$key.'_to']) && (trim($this->formData[$key.'_to']) !== '')) {
+            $to = trim($this->formData[$key.'_to']);
+            if ($intval) {
+                $to = intval($to);
+            }
+            elseif ($floatval) {
+                $to = floatval($to);
+            }
         }
 
         $res = [];
@@ -138,40 +194,7 @@ class Filter
      * Return string for use in SQL query
      *
      * @param    string    $key
-     * @return   string
-     * @access   private
-     */
-    private function getIntRange($key = '')
-    {
-        if (isset($this->formData[$key.'_from']) && (trim($this->formData[$key.'_from']) !== '')) {
-            $from = $this->formData[$key.'_from'];
-        }
-        if (isset($this->formData[$key.'_to']) && (trim($this->formData[$key.'_to']) !== '')) {
-            $to = $this->formData[$key.'_to'];
-        }
-
-        $res = [];
-        if (isset($from) && isset($to)) {
-            $res = [$key.' BETWEEN ? AND ?', [intval($from), intval($to)]];
-        }
-        elseif (isset($from)) {
-            $res = [$key.' >= ? ', [intval($from)]];
-        }
-        elseif (isset($to)) {
-            $res = [$key.' <= ? ', [intval($to)]];
-        }
-
-        return $res;
-    }
-
-
-    /**
-     * Function parse $this->formData and find field $key.
-     * Return string for use in SQL query
-     *
-     * @version  2015-08-29
-     * @param    string    $key
-     * @return   string
+     * @return   array
      * @access   private
      */
     private function getIn($key = '')
@@ -184,7 +207,26 @@ class Filter
             }
 
             // black magic
-            $res = [$key.' IN ('.implode(',', array_fill(0, sizeof($vals), '?')).')', $vals];
+            $res = [$key.' IN ('.implode(',', array_fill(0, sizeof($rows), '?')).')', $rows];
+        }
+
+        return $res;
+    }
+
+
+    /**
+     * Function parse $this->formData and find field $key.
+     * Return string for use in SQL query
+     *
+     * @param    string    $key
+     * @return   array
+     * @access   private
+     */
+    private function getLike($key = '')
+    {
+        $res = [];
+        if (!empty($this->formData[$key])){
+            $res = [$key.' LIKE ?', ['%'.$this->formData[$key].'%']];
         }
 
         return $res;
