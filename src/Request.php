@@ -79,9 +79,7 @@ class Request
      */
     public function getArray($key = '', $default = [])
     {
-        // get array - only in body
-        $tmp = $this->serverRequest->getParsedBody();
-        return !empty($tmp[$key])?$tmp[$key]:$default;
+        return $this->get($key, $default);
     }
 
 
