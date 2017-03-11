@@ -217,9 +217,9 @@ class Db
      * Function return database connection
      *
      * @return  mixed
-     * @access  private
+     * @access  public
      */
-    private function getConnection()
+    public function getConnection()
     {
         return $this->pdo;
     }

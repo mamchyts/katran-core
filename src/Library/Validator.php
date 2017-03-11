@@ -378,10 +378,10 @@ class Validator
     private function min_length($str, $val)
     {
         if (function_exists('mb_strlen')) {
-            return (mb_strlen($str, Helper::_cfg('page_charset')) > $val);
+            return (mb_strlen($str, Helper::_cfg('page_charset')) >= $val);
         }
 
-        return (strlen($str) > $val);
+        return (strlen($str) >= $val);
     }
 
 
@@ -396,10 +396,10 @@ class Validator
     private function max_length($str, $val)
     {
         if (function_exists('mb_strlen')) {
-            return (mb_strlen($str, Helper::_cfg('page_charset')) < $val);
+            return (mb_strlen($str, Helper::_cfg('page_charset')) <= $val);
         }
 
-        return (strlen($str) < $val);
+        return (strlen($str) <= $val);
     }
 
 
