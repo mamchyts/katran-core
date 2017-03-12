@@ -166,7 +166,7 @@ class Application extends Controller
         $controller     = '\\'.$area.'\\Controller\\'.ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER));
         $classFilePath  = Helper::_cfg('path_src').'/'.$area.'/Controller/'.ucfirst($this->getContainerVar(Controller::CONTAINER_VAR_CONTROLLER)).'.php';
         $viewPath       = Helper::_cfg('path_src').'/'.$area.'/View/';
-        $actMethod      = str_replace('_', '', $this->getContainerVar(Controller::CONTAINER_VAR_ACTION)).'Action';
+        $actMethod      = str_replace(['_', '-'], '', $this->getContainerVar(Controller::CONTAINER_VAR_ACTION)).'Action';
 
         if (!file_exists($classFilePath)) {
             $this->forward('/404');
