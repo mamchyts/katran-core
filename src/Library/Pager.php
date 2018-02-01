@@ -108,7 +108,10 @@ class Pager
         if(($this->pages === 0) || ($this->pages === 1))
             return '';
 
-        for($i = 0; $i < $this->pages; $i++){
+        $this->url->deleteParam('page');
+        $href[0] = $this->url->getUrl(TRUE);
+
+        for($i = 1; $i < $this->pages; $i++){
             $this->url->setParam('page', $i+1);
             $href[$i] = $this->url->getUrl(TRUE);
         }
